@@ -1,0 +1,34 @@
+package io.github.arkosammy12.ibb.core.parser;
+
+import java.util.Collection;
+
+public sealed interface StatementNode {
+
+    record Print(Collection<ExpressionListNode> expressionListNodes) implements StatementNode {}
+
+    record If(RelationalOperation relationalOperation, ExpressionNode lhs, ExpressionNode rhs, StatementNode statementNode) implements StatementNode {
+
+        public enum RelationalOperation {
+            LESS_THAN,
+            LESS_THAN_OR_EQUALS,
+            GREATER_THAN,
+            GREATER_THAN_OR_EQUALS,
+            EQUALS,
+            NOT_EQUALS
+        }
+
+    }
+
+    record Goto(ExpressionNode expressionNode) implements StatementNode {}
+
+    record Input(Collection<ExpressionNode.VariableNode> variableNodes) implements StatementNode {}
+
+    record VariableAssignment(ExpressionNode.VariableNode variableNode, ExpressionNode expressionNode) implements StatementNode {}
+
+    record Gosub(ExpressionNode expressionNode) implements StatementNode {}
+
+    record Return() implements StatementNode {}
+
+    record End() implements StatementNode {}
+
+}
