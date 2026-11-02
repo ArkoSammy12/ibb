@@ -36,7 +36,12 @@ public final class TinyBasicParser {
                 throw new TinyBasicParseException("The line number '%d' cannot be negative!".formatted(numberToken.getValue()), numberToken.getSourcePosition());
             }
         }
-        return new LineNode(lineNumber, this.parseStatement(context));
+        StatementNode statementNode = this.parseStatement(context);
+        Token trailingToken = context.peek();
+        if (!(trailingToken instanceof EndOfFileToken)) {
+            throw new TinyBasicParseException("Trailing line token '%s'!".formatted(trailingToken.getLexeme()), trailingToken.getSourcePosition());
+        }
+        return new LineNode(lineNumber, statementNode);
     }
 
     private StatementNode parseStatement(TinyBasicParserContext context) throws TinyBasicParseException {
