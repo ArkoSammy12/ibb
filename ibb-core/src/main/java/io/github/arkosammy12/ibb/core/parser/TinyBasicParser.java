@@ -82,10 +82,10 @@ public final class TinyBasicParser {
                 ExpressionNode.VariableNode variableNode = this.parseVariable(context);
                 Token middleToken = context.poll();
                 if (middleToken instanceof EndOfFileToken) {
-                    throw new TinyBasicParseException("Expected assignment operator '=' in variable assignment!", token.getSourcePosition());
+                    throw new TinyBasicParseException("Expected assignment operator '=' in variable assignment!", middleToken.getSourcePosition());
                 }
                 if (!(middleToken instanceof OperatorToken operatorToken && operatorToken.getOperator() == Operator.EQUALS)) {
-                    throw new TinyBasicParseException("Unknown assignment operator token '%s'!".formatted(middleToken.getLexeme()), token.getSourcePosition());
+                    throw new TinyBasicParseException("Unknown assignment operator token '%s'!".formatted(middleToken.getLexeme()), middleToken.getSourcePosition());
                 }
                 ExpressionNode expressionNode = this.parseExpression(context);
                 yield new StatementNode.VariableAssignment(variableNode, expressionNode);
