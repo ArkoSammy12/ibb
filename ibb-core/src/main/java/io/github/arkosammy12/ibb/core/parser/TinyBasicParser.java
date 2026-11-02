@@ -67,7 +67,7 @@ public final class TinyBasicParser {
                         default -> throw new TinyBasicParseException("Unknown relational operator '%s'!".formatted(operatorToken.getLexeme()), operatorToken.getSourcePosition());
                     };
                     case Token t -> throw new TinyBasicParseException("The token '%s' is not a relational operator!".formatted(t.getLexeme()), t.getSourcePosition());
-                    case null -> throw new TinyBasicParseException("Expected relational operator in 'IF' condition!", token.getSourcePosition());
+                    case null -> throw new TinyBasicParseException("Expected relational operator in 'IF' condition!", context.peekSourcePosition());
                 };
                 ExpressionNode rhs = this.parseExpression(context);
                 if (!(context.poll() instanceof KeywordToken thenToken && thenToken.getKeyword() == Keyword.THEN)) {
