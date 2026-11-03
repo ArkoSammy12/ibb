@@ -101,7 +101,7 @@ public final class TinyBasicLexer {
                 return new StringToken(leftDoubleQuoteCharacter.sourcePosition(), sb.toString());
             }
         }
-         throw new TinyBasicParseException("Unclosed string literal '%s'".formatted(sb.toString()), leftDoubleQuoteCharacter.sourcePosition());
+         throw new TinyBasicParseException("Unclosed string literal '%s'!".formatted(sb.toString()), leftDoubleQuoteCharacter.sourcePosition());
     }
 
     private NumberToken lexNumber(TinyBasicLexerContext context, SourceCharacter numberCharacter) {
