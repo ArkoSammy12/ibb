@@ -58,6 +58,42 @@ public sealed interface ExpressionNode extends ExpressionListNode {
 
     }
 
+    record AbsFunctionNode(PrefixOperator prefixOperator, ExpressionNode expressionNode) implements ExpressionNode {
+
+        @Override
+        public PrefixOperator getPrefixOperator() {
+            return this.prefixOperator();
+        }
+
+    }
+
+    record AscFunctionNode(PrefixOperator prefixOperator, String contents) implements ExpressionNode {
+
+        @Override
+        public PrefixOperator getPrefixOperator() {
+            return this.prefixOperator();
+        }
+
+    }
+
+    record RndFunctionNode(PrefixOperator prefixOperator, ExpressionNode expressionNode) implements ExpressionNode {
+
+        @Override
+        public PrefixOperator getPrefixOperator() {
+            return this.prefixOperator();
+        }
+
+    }
+
+    record SgnFunctionNode(PrefixOperator prefixOperator, ExpressionNode expressionNode) implements ExpressionNode {
+
+        @Override
+        public PrefixOperator getPrefixOperator() {
+            return this.prefixOperator();
+        }
+
+    }
+
     enum PrefixOperator {
         PLUS,
         MINUS,

@@ -9,7 +9,11 @@ public enum Keyword implements Lexeme {
     LET("let"),
     GOSUB("gosub"),
     RETURN("return"),
-    END("end");
+    END("end"),
+    ABS("abs"),
+    ASC("asc"),
+    RND("rnd"),
+    SGN("sgn");
 
     private final String pattern;
 

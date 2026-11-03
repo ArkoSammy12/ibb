@@ -47,7 +47,7 @@ public final class TinyBasicParser {
     private StatementNode parseStatement(TinyBasicParserContext context) throws TinyBasicParseException {
         return switch (context.poll()) {
             case VariableToken variableToken -> this.parseVariableAssignment(context, new AssignmentTargetNode.VariableTarget(variableToken.getVariable()));
-            case ArraySigilToken _ -> this.parseVariableAssignment(context, new AssignmentTargetNode.ArrayElementTarget(this.parseArrayReferenceExpressionArgument(context)));
+            case ArraySigilToken _ -> this.parseVariableAssignment(context, new AssignmentTargetNode.ArrayElementTarget(this.parseParenthesizedExpression(context, "array reference expression")));
             case KeywordToken keywordToken -> switch (keywordToken.getKeyword()) {
                 case PRINT -> new StatementNode.Print(this.parseExpressionList(context));
                 case IF -> {
@@ -187,7 +187,7 @@ public final class TinyBasicParser {
         return switch (context.poll()) {
             case VariableToken variableToken -> new ExpressionNode.VariableNode(prefixOperator, variableToken.getVariable());
             case NumberToken numberToken -> new ExpressionNode.NumberNode(prefixOperator, numberToken.getValue());
-            case ArraySigilToken _ -> new ExpressionNode.ArrayReferenceNode(prefixOperator, this.parseArrayReferenceExpressionArgument(context));
+            case ArraySigilToken _ -> new ExpressionNode.ArrayReferenceNode(prefixOperator, this.parseParenthesizedExpression(context, "array reference expression"));
             case DelimiterToken delimiterToken -> {
                 if (delimiterToken.getDelimiter() != Delimiter.LEFT_PARENTHESIS) {
                     throw new TinyBasicParseException("Expected '(' to begin expression, found '%s!".formatted(delimiterToken.getLexeme()), delimiterToken.getSourcePosition());
@@ -199,27 +199,40 @@ public final class TinyBasicParser {
                 }
                 yield expressionNode;
             }
-            case Token token -> throw new TinyBasicParseException("Expected variable, number, array reference or expression enclosing in parenthesis, found '%s'!".formatted(token.getLexeme()), token.getSourcePosition());
+            case KeywordToken keywordToken -> switch (keywordToken.getKeyword()) {
+                case ASC -> {
+                    Token arg = context.poll();
+                    if (!(arg instanceof StringToken stringArg)) {
+                        throw new TinyBasicParseException("Expected string literal argument for ASC() function, found '%s'!".formatted(arg.getLexeme()), arg.getSourcePosition());
+                    }
+                    yield new ExpressionNode.AscFunctionNode(prefixOperator, stringArg.getContents());
+                }
+                case ABS -> new ExpressionNode.AbsFunctionNode(prefixOperator, this.parseParenthesizedExpression(context, "ABS() expression argument"));
+                case RND -> new ExpressionNode.RndFunctionNode(prefixOperator, this.parseParenthesizedExpression(context, "RND() expression argument"));
+                case SGN -> new ExpressionNode.SgnFunctionNode(prefixOperator, this.parseParenthesizedExpression(context, "SGN() expression argument"));
+                default -> throw new TinyBasicParseException("Expected variable, number, array reference, function or expression enclosing in parenthesis, found '%s'!".formatted(keywordToken.getLexeme()), keywordToken.getSourcePosition());
+            };
+            case Token token -> throw new TinyBasicParseException("Expected variable, number, array reference, function or expression enclosing in parenthesis, found '%s'!".formatted(token.getLexeme()), token.getSourcePosition());
         };
     }
 
     private AssignmentTargetNode parseAssignmentTarget(TinyBasicParserContext context) throws TinyBasicParseException {
         return switch (context.poll()) {
             case VariableToken variableToken -> new AssignmentTargetNode.VariableTarget(variableToken.getVariable());
-            case ArraySigilToken _ -> new AssignmentTargetNode.ArrayElementTarget(this.parseArrayReferenceExpressionArgument(context));
+            case ArraySigilToken _ -> new AssignmentTargetNode.ArrayElementTarget(this.parseParenthesizedExpression(context, "array reference expression"));
             case Token token -> throw new TinyBasicParseException("Expected variable or array reference, found '%s'!".formatted(token.getLexeme()), token.getSourcePosition());
         };
     }
 
-    private ExpressionNode parseArrayReferenceExpressionArgument(TinyBasicParserContext context) throws TinyBasicParseException {
+    private ExpressionNode parseParenthesizedExpression(TinyBasicParserContext context, String expected) throws TinyBasicParseException {
         Token opening = context.poll();
         if (!(opening instanceof DelimiterToken openingDelimiter && openingDelimiter.getDelimiter() == Delimiter.LEFT_PARENTHESIS)) {
-            throw new TinyBasicParseException("Expected '(' to begin array reference expression, found '%s'!".formatted(opening.getLexeme()), opening.getSourcePosition());
+            throw new TinyBasicParseException("Expected '(' to begin %s, found '%s'!".formatted(expected, opening.getLexeme()), opening.getSourcePosition());
         }
         ExpressionNode expressionNode = this.parseExpression(context);
         Token closing = context.poll();
         if (!(closing instanceof DelimiterToken closingDelimiter && closingDelimiter.getDelimiter() == Delimiter.RIGHT_PARENTHESIS)) {
-            throw new TinyBasicParseException("Expected ')' to end array reference expression, found '%s'!".formatted(closing.getLexeme()), opening.getSourcePosition());
+            throw new TinyBasicParseException("Expected ')' to end %s, found '%s'!".formatted(expected, closing.getLexeme()), opening.getSourcePosition());
         }
         return expressionNode;
     }

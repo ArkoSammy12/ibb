@@ -15,10 +15,6 @@ public class TinyBasicParseException extends Exception {
         this.sourcePosition = sourcePosition;
     }
 
-    public TinyBasicParseException(String message) {
-        this(message, null);
-    }
-
     public Optional<SourcePosition> getSourcePosition() {
         return Optional.ofNullable(this.sourcePosition);
     }
