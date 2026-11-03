@@ -38,7 +38,7 @@ public final class TinyBasicParser {
         }
         StatementNode statementNode = this.parseStatement(context);
         Token trailingToken = context.peek();
-        if (!(trailingToken instanceof EndOfFileToken)) {
+        if (!(trailingToken instanceof EndOfLineToken)) {
             throw new TinyBasicParseException("Trailing line token '%s'!".formatted(trailingToken.getLexeme()), trailingToken.getSourcePosition());
         }
         return new LineNode(lineNumber, statementNode);
@@ -49,7 +49,7 @@ public final class TinyBasicParser {
         if (token == null) {
             throw new TinyBasicParseException("Expected start of statement!", context.peekSourcePosition());
         }
-        if (token instanceof EndOfFileToken) {
+        if (token instanceof EndOfLineToken) {
             throw new TinyBasicParseException("Expected start of statement!", token.getSourcePosition());
         }
         return switch (token) {
@@ -93,7 +93,7 @@ public final class TinyBasicParser {
 
     private StatementNode.VariableAssignment parseVariableAssignment(TinyBasicParserContext context, AssignmentTargetNode assignmentTargetNode) throws TinyBasicParseException {
         Token middleToken = context.poll();
-        if (middleToken instanceof EndOfFileToken) {
+        if (middleToken instanceof EndOfLineToken) {
             throw new TinyBasicParseException("Expected assignment operator '=' in variable assignment!", middleToken.getSourcePosition());
         }
         if (!(middleToken instanceof OperatorToken operatorToken && operatorToken.getOperator() == Operator.EQUALS)) {
@@ -203,7 +203,7 @@ public final class TinyBasicParser {
                 }
                 ExpressionNode expressionNode = new ExpressionNode.OperatorPrefixedExpressionNode(prefixOperator, this.parseExpression(context));
                 Token closing = context.poll();
-                if (closing instanceof EndOfFileToken) {
+                if (closing instanceof EndOfLineToken) {
                     throw new TinyBasicParseException("Expected ')' to end expression!", context.peekSourcePosition());
                 }
                 if (!(closing instanceof DelimiterToken closingDelimiter && closingDelimiter.getDelimiter() == Delimiter.RIGHT_PARENTHESIS)) {

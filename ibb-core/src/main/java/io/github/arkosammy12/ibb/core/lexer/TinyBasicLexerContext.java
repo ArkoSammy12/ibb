@@ -42,7 +42,7 @@ final class TinyBasicLexerContext {
 
     SourceStream<Token> getTokenStream() {
         SourcePosition lastPosition = this.tokens.stream().reduce((_, second) -> second).map(Token::getSourcePosition).orElseGet(() -> new SourcePosition(0, 0));
-        return new SourceStream<>(this.tokens, new EndOfFileToken(lastPosition));
+        return new SourceStream<>(this.tokens, new EndOfLineToken(lastPosition));
     }
 
     private void discardWhitespaceIfNecessary() {
