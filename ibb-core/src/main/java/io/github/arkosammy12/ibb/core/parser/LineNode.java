@@ -4,7 +4,7 @@ import java.util.Collection;
 import java.util.OptionalInt;
 import java.util.stream.Collectors;
 
-public class LineNode {
+public final class LineNode {
 
     private final Integer lineNumber;
     private final StatementNode firstStatementNode;
@@ -29,7 +29,7 @@ public class LineNode {
 
     @Override
     public String toString() {
-        return "LineNode[lineNumber=%s, firstStatement=%s, extraStatements=[%s]]".formatted(this.lineNumber == null ? "" : this.lineNumber, this.firstStatementNode, this.extraStatementNodes.stream().map(StatementNode::toString).collect(Collectors.joining(", ")));
+        return "LineNode[lineNumber=%s, firstStatement=%s, extraStatements=[%s]]".formatted(this.lineNumber == null ? "none" : this.lineNumber, this.firstStatementNode, this.extraStatementNodes.stream().map(StatementNode::toString).collect(Collectors.joining(", ")));
     }
 
 }
