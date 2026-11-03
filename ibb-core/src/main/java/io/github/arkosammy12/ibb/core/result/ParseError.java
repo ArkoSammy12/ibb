@@ -15,13 +15,11 @@ public interface ParseError {
     }
 
     static String getMessage(ParseError parseError) {
-        return "%s%s".formatted(parseError.getSourcePosition().map(sourcePosition -> {
-            if (sourcePosition.getRow().isPresent()) {
-                return "(%d:%d) ".formatted(sourcePosition.getRow().getAsInt() + 1, sourcePosition.getColumn() + 1);
-            } else {
-                return "(%d) ".formatted(sourcePosition.getColumn() + 1);
-            }
-        }).orElse(""), parseError.getMessage());
+        return "%s%s".formatted(parseError.getSourcePosition()
+                .map(sourcePosition -> "(%d:%d) ".formatted(sourcePosition.row() + 1, sourcePosition.column() + 1))
+                .orElse(""),
+                parseError.getMessage()
+        );
     }
 
 }
