@@ -256,7 +256,7 @@ public final class TinyBasicParser {
         ExpressionNode expressionNode = this.parseExpression(context);
         Token closing = context.poll();
         if (!(closing instanceof DelimiterToken closingDelimiter && closingDelimiter.getDelimiter() == Delimiter.RIGHT_PARENTHESIS)) {
-            throw new TinyBasicParseException("Expected ')' to end %s, found '%s'!".formatted(expected, closing.getLexeme()), opening.getSourcePosition());
+            throw new TinyBasicParseException("Expected ')' to end %s, found '%s'!".formatted(expected, closing.getLexeme()), closing.getSourcePosition());
         }
         return expressionNode;
     }
