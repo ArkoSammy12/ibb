@@ -13,7 +13,8 @@ public enum Keyword implements Lexeme {
     ABS("abs"),
     ASC("asc"),
     RND("rnd"),
-    SGN("sgn");
+    SGN("sgn"),
+    REM("rem");
 
     private final String pattern;
 

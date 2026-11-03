@@ -31,4 +31,6 @@ public sealed interface StatementNode {
 
     record End() implements StatementNode {}
 
+    record Rem() implements StatementNode {}
+
 }

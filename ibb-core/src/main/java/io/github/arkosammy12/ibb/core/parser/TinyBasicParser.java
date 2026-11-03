@@ -42,9 +42,10 @@ public final class TinyBasicParser {
             context.poll();
             extraStatementNodes.add(this.parseStatement(context));
         }
-        Token trailingToken = context.peek();
-        if (!(trailingToken instanceof EndOfLineToken)) {
-            throw new TinyBasicParseException("Trailing line token '%s'!".formatted(trailingToken.getLexeme()), trailingToken.getSourcePosition());
+        switch (context.peek()) {
+            case EndOfLineToken _ -> {}
+            case KeywordToken trailingKeywordToken when trailingKeywordToken.getKeyword() == Keyword.REM -> this.consumeRemainingTokens(context);
+            case Token trailingToken -> throw new TinyBasicParseException("Trailing line token '%s'!".formatted(trailingToken.getLexeme()), trailingToken.getSourcePosition());
         }
         return new LineNode(lineNumber, firstStatementNode, extraStatementNodes);
     }
@@ -54,6 +55,10 @@ public final class TinyBasicParser {
             case VariableToken variableToken -> this.parseVariableAssignment(context, new AssignmentTargetNode.VariableTarget(variableToken.getVariable()));
             case ArraySigilToken _ -> this.parseVariableAssignment(context, new AssignmentTargetNode.ArrayElementTarget(this.parseParenthesizedExpression(context, "array reference expression")));
             case KeywordToken keywordToken -> switch (keywordToken.getKeyword()) {
+                case REM -> {
+                    this.consumeRemainingTokens(context);
+                    yield new StatementNode.Rem();
+                }
                 case PRINT -> new StatementNode.Print(this.parseExpressionListNode(context), this.parseExpressionList(context));
                 case GOTO -> new StatementNode.Goto(this.parseExpression(context));
                 case INPUT -> new StatementNode.Input(this.parseAssignmentTarget(context), this.parseAssignmentTargetList(context));
@@ -238,6 +243,12 @@ public final class TinyBasicParser {
             throw new TinyBasicParseException("Expected ')' to end %s, found '%s'!".formatted(expected, closing.getLexeme()), opening.getSourcePosition());
         }
         return expressionNode;
+    }
+
+    private void consumeRemainingTokens(TinyBasicParserContext context) {
+        while (context.hasTokens()) {
+            context.poll();
+        }
     }
 
 }
