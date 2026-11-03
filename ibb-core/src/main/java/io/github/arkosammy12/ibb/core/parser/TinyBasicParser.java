@@ -47,54 +47,59 @@ public final class TinyBasicParser {
     private StatementNode parseStatement(TinyBasicParserContext context) throws TinyBasicParseException {
         Token token = context.poll();
         if (token == null) {
-            throw new TinyBasicParseException("Expected statement beginning!", context.peekSourcePosition());
+            throw new TinyBasicParseException("Expected start of statement!", context.peekSourcePosition());
         }
-        if (!(token instanceof KeywordToken keywordToken)) {
-            throw new TinyBasicParseException("Invalid statement beginning '%s'!".formatted(token.getLexeme()), token.getSourcePosition());
+        if (token instanceof EndOfFileToken) {
+            throw new TinyBasicParseException("Expected start of statement!", token.getSourcePosition());
         }
-        return switch (keywordToken.getKeyword()) {
-            case PRINT -> new StatementNode.Print(this.parseExpressionList(context));
-            case IF -> {
-                ExpressionNode lhs = this.parseExpression(context);
-                StatementNode.If.RelationalOperation relationalOperation = switch (context.poll()) {
-                    case OperatorToken operatorToken -> switch (operatorToken.getOperator()) {
-                        case LESS_THAN ->  StatementNode.If.RelationalOperation.LESS_THAN;
-                        case LESS_THAN_OR_EQUALS -> StatementNode.If.RelationalOperation.LESS_THAN_OR_EQUALS;
-                        case GREATER_THAN -> StatementNode.If.RelationalOperation.GREATER_THAN;
-                        case GREATER_THAN_OR_EQUALS -> StatementNode.If.RelationalOperation.GREATER_THAN_OR_EQUALS;
-                        case EQUALS -> StatementNode.If.RelationalOperation.EQUALS;
-                        case NOT_EQUALS_CONVERGENT, NOT_EQUALS_DIVERGENT -> StatementNode.If.RelationalOperation.NOT_EQUALS;
-                        default -> throw new TinyBasicParseException("Unknown relational operator '%s'!".formatted(operatorToken.getLexeme()), operatorToken.getSourcePosition());
+        return switch (token) {
+            case VariableToken variableToken -> this.parseVariableAssignment(context, new ExpressionNode.VariableNode(ExpressionNode.PrefixOperator.NONE, variableToken.getVariable()));
+            case KeywordToken keywordToken -> switch (keywordToken.getKeyword()) {
+                case PRINT -> new StatementNode.Print(this.parseExpressionList(context));
+                case IF -> {
+                    ExpressionNode lhs = this.parseExpression(context);
+                    StatementNode.If.RelationalOperation relationalOperation = switch (context.poll()) {
+                        case OperatorToken operatorToken -> switch (operatorToken.getOperator()) {
+                            case LESS_THAN ->  StatementNode.If.RelationalOperation.LESS_THAN;
+                            case LESS_THAN_OR_EQUALS -> StatementNode.If.RelationalOperation.LESS_THAN_OR_EQUALS;
+                            case GREATER_THAN -> StatementNode.If.RelationalOperation.GREATER_THAN;
+                            case GREATER_THAN_OR_EQUALS -> StatementNode.If.RelationalOperation.GREATER_THAN_OR_EQUALS;
+                            case EQUALS -> StatementNode.If.RelationalOperation.EQUALS;
+                            case NOT_EQUALS_CONVERGENT, NOT_EQUALS_DIVERGENT -> StatementNode.If.RelationalOperation.NOT_EQUALS;
+                            default -> throw new TinyBasicParseException("Unknown relational operator '%s'!".formatted(operatorToken.getLexeme()), operatorToken.getSourcePosition());
+                        };
+                        case Token t -> throw new TinyBasicParseException("The token '%s' is not a relational operator!".formatted(t.getLexeme()), t.getSourcePosition());
+                        case null -> throw new TinyBasicParseException("Expected relational operator in 'IF' condition!", context.peekSourcePosition());
                     };
-                    case Token t -> throw new TinyBasicParseException("The token '%s' is not a relational operator!".formatted(t.getLexeme()), t.getSourcePosition());
-                    case null -> throw new TinyBasicParseException("Expected relational operator in 'IF' condition!", context.peekSourcePosition());
-                };
-                ExpressionNode rhs = this.parseExpression(context);
-                if (!(context.poll() instanceof KeywordToken thenToken && thenToken.getKeyword() == Keyword.THEN)) {
-                    throw new TinyBasicParseException("Expected 'then' to begin 'if' statement body!", context.peekSourcePosition());
+                    ExpressionNode rhs = this.parseExpression(context);
+                    if (!(context.poll() instanceof KeywordToken thenToken && thenToken.getKeyword() == Keyword.THEN)) {
+                        throw new TinyBasicParseException("Expected 'then' to begin 'if' statement body!", context.peekSourcePosition());
+                    }
+                    StatementNode statementNode = this.parseStatement(context);
+                    yield new StatementNode.If(relationalOperation, lhs, rhs, statementNode);
                 }
-                StatementNode statementNode = this.parseStatement(context);
-                yield new StatementNode.If(relationalOperation, lhs, rhs, statementNode);
-            }
-            case GOTO -> new StatementNode.Goto(this.parseExpression(context));
-            case INPUT -> new StatementNode.Input(this.parseVariableList(context));
-            case LET -> {
-                ExpressionNode.VariableNode variableNode = this.parseVariable(context);
-                Token middleToken = context.poll();
-                if (middleToken instanceof EndOfFileToken) {
-                    throw new TinyBasicParseException("Expected assignment operator '=' in variable assignment!", middleToken.getSourcePosition());
-                }
-                if (!(middleToken instanceof OperatorToken operatorToken && operatorToken.getOperator() == Operator.EQUALS)) {
-                    throw new TinyBasicParseException("Unknown assignment operator token '%s'!".formatted(middleToken.getLexeme()), middleToken.getSourcePosition());
-                }
-                ExpressionNode expressionNode = this.parseExpression(context);
-                yield new StatementNode.VariableAssignment(variableNode, expressionNode);
-            }
-            case GOSUB -> new StatementNode.Gosub(this.parseExpression(context));
-            case RETURN -> new StatementNode.Return();
-            case END -> new StatementNode.End();
-            default -> throw new TinyBasicParseException("Invalid statement beginning '%s'!".formatted(token.getLexeme()), token.getSourcePosition());
+                case GOTO -> new StatementNode.Goto(this.parseExpression(context));
+                case INPUT -> new StatementNode.Input(this.parseVariableList(context));
+                case LET -> this.parseVariableAssignment(context, this.parseVariable(context));
+                case GOSUB -> new StatementNode.Gosub(this.parseExpression(context));
+                case RETURN -> new StatementNode.Return();
+                case END -> new StatementNode.End();
+                default -> throw new TinyBasicParseException("Illegal start of statement '%s'!".formatted(token.getLexeme()), token.getSourcePosition());
+            };
+            default -> throw new TinyBasicParseException("Illegal start of statement '%s'!".formatted(token.getLexeme()), token.getSourcePosition());
         };
+    }
+
+    private StatementNode.VariableAssignment parseVariableAssignment(TinyBasicParserContext context, ExpressionNode.VariableNode assignmentTargetNode) throws TinyBasicParseException {
+        Token middleToken = context.poll();
+        if (middleToken instanceof EndOfFileToken) {
+            throw new TinyBasicParseException("Expected assignment operator '=' in variable assignment!", middleToken.getSourcePosition());
+        }
+        if (!(middleToken instanceof OperatorToken operatorToken && operatorToken.getOperator() == Operator.EQUALS)) {
+            throw new TinyBasicParseException("Unknown assignment operator token '%s'!".formatted(middleToken.getLexeme()), middleToken.getSourcePosition());
+        }
+        ExpressionNode expressionNode = this.parseExpression(context);
+        return new StatementNode.VariableAssignment(assignmentTargetNode, expressionNode);
     }
 
     private Collection<ExpressionListNode> parseExpressionList(TinyBasicParserContext context) throws TinyBasicParseException {
