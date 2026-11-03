@@ -53,7 +53,8 @@ public sealed interface ExpressionNode extends ExpressionListNode {
             ADD,
             SUBTRACT,
             MULTIPLY,
-            DIVIDE
+            DIVIDE,
+            MODULO
         }
 
     }

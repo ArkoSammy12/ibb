@@ -10,6 +10,7 @@ import io.github.arkosammy12.ibb.core.util.TriFunction;
 
 import java.util.Collection;
 import java.util.Optional;
+import java.util.Stack;
 
 public final class TinyBasicLexer {
 
@@ -26,6 +27,18 @@ public final class TinyBasicLexer {
             TinyBasicLexerContext context = new TinyBasicLexerContext(sourceCharacterSourceStream);
             while (context.hasCharacters()) {
                 SourceCharacter sourceCharacter = context.poll();
+                if (this.lexToken(context, sourceCharacter, Keyword.class, KeywordToken::new)) {
+                    continue;
+                }
+                if (this.lexToken(context, sourceCharacter, Operator.class, OperatorToken::new)) {
+                    continue;
+                }
+                if (this.lexToken(context, sourceCharacter, Delimiter.class, DelimiterToken::new)) {
+                    continue;
+                }
+                if (this.lexToken(context, sourceCharacter, Variable.class, VariableToken::new)) {
+                    continue;
+                }
                 if (isDigit(sourceCharacter.character())) {
                     context.addToken(this.lexNumber(context, sourceCharacter));
                     continue;
@@ -40,18 +53,6 @@ public final class TinyBasicLexer {
                 }
                 if (sourceCharacter.character() == '\'') {
                     context.addToken(new KeywordToken(sourceCharacter.sourcePosition(), Keyword.REM, "'"));
-                    continue;
-                }
-                if (this.lexToken(context, sourceCharacter, Keyword.class, KeywordToken::new)) {
-                    continue;
-                }
-                if (this.lexToken(context, sourceCharacter, Variable.class, VariableToken::new)) {
-                    continue;
-                }
-                if (this.lexToken(context, sourceCharacter, Operator.class, OperatorToken::new)) {
-                    continue;
-                }
-                if (this.lexToken(context, sourceCharacter, Delimiter.class, DelimiterToken::new)) {
                     continue;
                 }
                 return new ParseResult.Error<>(new TinyBasicLexError("Unknown token '%s'!".formatted(sourceCharacter.character()), sourceCharacter.sourcePosition()));
@@ -69,27 +70,43 @@ public final class TinyBasicLexer {
         if (!Lexeme.isPatternBeginningOfKeyword(lexemeClass, String.valueOf(firstLetterCharacter.character()))) {
             return false;
         }
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append(firstLetterCharacter.character());
+        Stack<SourceCharacter> sourceCharacterStack = new Stack<>();
+        StringBuilder sb = new StringBuilder();
+        sb.append(firstLetterCharacter.character());
         while (context.hasCharacters()) {
             SourceCharacter sourceCharacter = context.peek();
             if (sourceCharacter.character() == null) {
                 break;
             }
-            if (Lexeme.isPatternBeginningOfKeyword(lexemeClass, stringBuilder + String.valueOf(sourceCharacter.character()))) {
-                context.poll();
-                stringBuilder.append(sourceCharacter.character());
+            if (Lexeme.isPatternBeginningOfKeyword(lexemeClass, sb + String.valueOf(sourceCharacter.character()))) {
+                sourceCharacterStack.push(context.poll());
+                sb.append(sourceCharacter.character());
             } else {
                 break;
             }
         }
-        String lexeme = stringBuilder.toString();
+        String lexeme = sb.toString();
         Optional<T> token = Lexeme.getMatchingLexeme(lexemeClass, lexeme);
-        if (token.isEmpty()) {
-            return false;
-        } else {
+
+        if (token.isPresent()) {
             context.addToken(tokenFunction.apply(firstLetterCharacter.sourcePosition(), token.get(), lexeme));
             return true;
+        } else {
+            // If our stack is non-empty, we could have consumed a pattern that matches a built-in pattern,
+            // so we pop characters from the stack and push them back to the character queue until we come across a
+            // known pattern, or if the stack runs out, in which case none of the previous characters matched a pattern
+            // for the current pattern enum
+            while (!sourceCharacterStack.isEmpty() && !sb.isEmpty()) {
+                sb.deleteCharAt(sb.length() - 1);
+                context.push(sourceCharacterStack.pop());
+                String backtrackedLexeme = sb.toString();
+                Optional<T> backtrackedToken = Lexeme.getMatchingLexeme(lexemeClass, backtrackedLexeme);
+                if (backtrackedToken.isPresent()) {
+                    context.addToken(tokenFunction.apply(firstLetterCharacter.sourcePosition(), backtrackedToken.get(), backtrackedLexeme));
+                    return true;
+                }
+            }
+            return false;
         }
     }
 

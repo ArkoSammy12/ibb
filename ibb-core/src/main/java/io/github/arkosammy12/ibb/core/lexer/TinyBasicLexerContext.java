@@ -34,6 +34,10 @@ final class TinyBasicLexerContext {
         return sourceCharacter == null ? new SourceCharacter(null, new SourcePosition(0, 0)) : sourceCharacter;
     }
 
+    void push(SourceCharacter sourceCharacter) {
+        this.sourceCharacterStream.push(sourceCharacter);
+    }
+
     boolean hasCharacters() {
         return !this.sourceCharacterStream.isEmpty();
     }

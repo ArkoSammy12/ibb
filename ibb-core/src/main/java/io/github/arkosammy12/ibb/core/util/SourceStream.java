@@ -4,7 +4,7 @@ import java.util.*;
 
 public final class SourceStream<T> {
 
-    private final Queue<T> queue = new ArrayDeque<>();
+    private final Deque<T> queue = new ArrayDeque<>();
     private final T defaulElement;
 
     public SourceStream(Collection<T> elements, T defaultElement) {
@@ -26,6 +26,10 @@ public final class SourceStream<T> {
 
     public Optional<T> peek() {
         return Optional.ofNullable(this.queue.peek());
+    }
+
+    public void push(T element) {
+        this.queue.offerFirst(element);
     }
 
     public boolean isEmpty() {

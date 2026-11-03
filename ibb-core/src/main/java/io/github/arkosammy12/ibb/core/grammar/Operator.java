@@ -5,6 +5,7 @@ public enum Operator implements Lexeme {
     MINUS("-"),
     TIMES("*"),
     DIVIDE("/"),
+    MOD("mod"),
     LESS_THAN("<"),
     LESS_THAN_OR_EQUALS("<="),
     GREATER_THAN(">"),
@@ -22,13 +23,6 @@ public enum Operator implements Lexeme {
     @Override
     public String getPattern() {
         return this.pattern;
-    }
-
-    public boolean isRelationalOperator() {
-        return switch (this) {
-            case LESS_THAN, LESS_THAN_OR_EQUALS, GREATER_THAN, GREATER_THAN_OR_EQUALS, NOT_EQUALS_CONVERGENT, NOT_EQUALS_DIVERGENT, EQUALS -> true;
-            default -> false;
-        };
     }
 
 }

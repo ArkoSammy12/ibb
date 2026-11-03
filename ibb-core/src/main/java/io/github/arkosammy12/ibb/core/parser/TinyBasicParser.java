@@ -195,6 +195,7 @@ public final class TinyBasicParser {
             case OperatorToken rhsOperatorToken -> switch (rhsOperatorToken.getOperator()) {
                 case TIMES -> ExpressionNode.OperationExpressionNode.Operation.MULTIPLY;
                 case DIVIDE -> ExpressionNode.OperationExpressionNode.Operation.DIVIDE;
+                case MOD -> ExpressionNode.OperationExpressionNode.Operation.MODULO;
                 default -> null;
             };
             default -> null;
