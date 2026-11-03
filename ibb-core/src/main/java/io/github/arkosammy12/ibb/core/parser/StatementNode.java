@@ -8,13 +8,13 @@ public sealed interface StatementNode {
 
     record Print(ExpressionListNode firstExpressionListNode, Collection<ExpressionListNode> extraExpressionListNodes) implements StatementNode {}
 
-    record Goto(ExpressionNode expressionNode) implements StatementNode {}
+    record Goto(NumericalExpressionNode numericalExpressionNode) implements StatementNode {}
 
     record Input(AssignmentTargetNode firstAssignmentTargetNode, Collection<AssignmentTargetNode> extraAssignmentTargetNodes) implements StatementNode {}
 
-    record VariableAssignment(AssignmentTargetNode assignmentTargetNode, ExpressionNode expressionNode) implements StatementNode {}
+    record VariableAssignment(AssignmentTargetNode assignmentTargetNode, NumericalExpressionNode numericalExpressionNode) implements StatementNode {}
 
-    record GoSub(ExpressionNode expressionNode) implements StatementNode {}
+    record GoSub(NumericalExpressionNode numericalExpressionNode) implements StatementNode {}
 
     record Return() implements StatementNode {}
 
@@ -24,9 +24,9 @@ public sealed interface StatementNode {
 
     record Next(Variable variable) implements StatementNode {}
 
-    record For(Variable variable, ExpressionNode startingExpressionNodeValue, ExpressionNode finalExpressionNodeValue) implements StatementNode {}
+    record For(Variable variable, NumericalExpressionNode startingNumericalExpressionNodeValue, NumericalExpressionNode finalNumericalExpressionNodeValue) implements StatementNode {}
 
-    record If(RelationalOperation relationalOperation, ExpressionNode lhs, ExpressionNode rhs, StatementNode statementNode) implements StatementNode {
+    record If(RelationalOperation relationalOperation, NumericalExpressionNode lhs, NumericalExpressionNode rhs, StatementNode statementNode) implements StatementNode {
 
         public enum RelationalOperation {
             LESS_THAN,

@@ -6,6 +6,6 @@ public interface AssignmentTargetNode {
 
     record VariableTarget(Variable variable) implements AssignmentTargetNode {}
 
-    record ArrayElementTarget(ExpressionNode expressionNode) implements AssignmentTargetNode {}
+    record ArrayElementTarget(NumericalExpressionNode numericalExpressionNode) implements AssignmentTargetNode {}
 
 }
