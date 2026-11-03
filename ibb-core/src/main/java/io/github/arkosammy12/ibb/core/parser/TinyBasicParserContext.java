@@ -1,5 +1,6 @@
 package io.github.arkosammy12.ibb.core.parser;
 
+import io.github.arkosammy12.ibb.core.lexer.EndOfLineToken;
 import io.github.arkosammy12.ibb.core.lexer.Token;
 import io.github.arkosammy12.ibb.core.util.SourcePosition;
 import io.github.arkosammy12.ibb.core.util.SourceStream;
@@ -13,11 +14,13 @@ final class TinyBasicParserContext {
     }
 
     Token poll() {
-        return this.tokenStream.pollOrDefault();
+        Token token = this.tokenStream.pollOrDefault();
+        return token == null ? new EndOfLineToken(new SourcePosition(0, 0)) : token;
     }
 
     Token peek() {
-        return this.tokenStream.peekOrDefault();
+        Token token = this.tokenStream.peekOrDefault();
+        return token == null ? new EndOfLineToken(new SourcePosition(0, 0)) : token;
     }
 
     SourcePosition peekSourcePosition() {

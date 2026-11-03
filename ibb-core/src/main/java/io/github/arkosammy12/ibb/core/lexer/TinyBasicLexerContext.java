@@ -24,12 +24,14 @@ final class TinyBasicLexerContext {
 
     SourceCharacter poll() {
         this.discardWhitespaceIfNecessary();
-        return this.sourceCharacterStream.pollOrDefault();
+        SourceCharacter sourceCharacter = this.sourceCharacterStream.pollOrDefault();
+        return sourceCharacter == null ? new SourceCharacter(null, new SourcePosition(0, 0)) : sourceCharacter;
     }
 
     SourceCharacter peek() {
         this.discardWhitespaceIfNecessary();
-        return this.sourceCharacterStream.peekOrDefault();
+        SourceCharacter sourceCharacter = this.sourceCharacterStream.peekOrDefault();
+        return sourceCharacter == null ? new SourceCharacter(null, new SourcePosition(0, 0)) : sourceCharacter;
     }
 
     boolean hasCharacters() {
