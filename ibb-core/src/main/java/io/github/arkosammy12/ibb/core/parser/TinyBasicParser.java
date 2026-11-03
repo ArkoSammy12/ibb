@@ -4,6 +4,7 @@ import io.github.arkosammy12.ibb.core.exception.TinyBasicParseException;
 import io.github.arkosammy12.ibb.core.grammar.Delimiter;
 import io.github.arkosammy12.ibb.core.grammar.Keyword;
 import io.github.arkosammy12.ibb.core.grammar.Operator;
+import io.github.arkosammy12.ibb.core.grammar.Variable;
 import io.github.arkosammy12.ibb.core.lexer.*;
 import io.github.arkosammy12.ibb.core.result.ParseResult;
 import io.github.arkosammy12.ibb.core.util.SourceStream;
@@ -55,17 +56,32 @@ public final class TinyBasicParser {
             case VariableToken variableToken -> this.parseVariableAssignment(context, new AssignmentTargetNode.VariableTarget(variableToken.getVariable()));
             case ArraySigilToken _ -> this.parseVariableAssignment(context, new AssignmentTargetNode.ArrayElementTarget(this.parseParenthesizedExpression(context, "array reference expression")));
             case KeywordToken keywordToken -> switch (keywordToken.getKeyword()) {
-                case REM -> {
-                    this.consumeRemainingTokens(context);
-                    yield new StatementNode.Rem();
-                }
                 case PRINT -> new StatementNode.Print(this.parseExpressionListNode(context), this.parseExpressionList(context));
                 case GOTO -> new StatementNode.Goto(this.parseExpression(context));
                 case INPUT -> new StatementNode.Input(this.parseAssignmentTarget(context), this.parseAssignmentTargetList(context));
                 case LET -> this.parseVariableAssignment(context, this.parseAssignmentTarget(context));
-                case GOSUB -> new StatementNode.Gosub(this.parseExpression(context));
+                case GOSUB -> new StatementNode.GoSub(this.parseExpression(context));
                 case RETURN -> new StatementNode.Return();
                 case END -> new StatementNode.End();
+                case NEXT -> new StatementNode.Next(this.parseVariable(context));
+                case REM -> {
+                    this.consumeRemainingTokens(context);
+                    yield new StatementNode.Rem();
+                }
+                case FOR -> {
+                    Variable variable = this.parseVariable(context);
+                    Token assignmentToken = context.poll();
+                    if (!(assignmentToken instanceof OperatorToken operatorToken && operatorToken.getOperator() == Operator.EQUALS)) {
+                        throw new TinyBasicParseException("Expected assignment operator '=', found '%s'!".formatted(assignmentToken), assignmentToken.getSourcePosition());
+                    }
+                    ExpressionNode startingExpressionNodeValue = this.parseExpression(context);
+                    Token toToken = context.poll();
+                    if (!(toToken instanceof KeywordToken toKeywordToken && toKeywordToken.getKeyword() == Keyword.TO)) {
+                        throw new TinyBasicParseException("Expected range separator 'to', found '%s'!".formatted(assignmentToken), assignmentToken.getSourcePosition());
+                    }
+                    ExpressionNode finalExpressionNodeValue = this.parseExpression(context);
+                    yield new StatementNode.For(variable, startingExpressionNodeValue, finalExpressionNodeValue);
+                }
                 case IF -> {
                     ExpressionNode lhs = this.parseExpression(context);
                     StatementNode.If.RelationalOperation relationalOperation = switch (context.poll()) {
@@ -243,6 +259,13 @@ public final class TinyBasicParser {
             throw new TinyBasicParseException("Expected ')' to end %s, found '%s'!".formatted(expected, closing.getLexeme()), opening.getSourcePosition());
         }
         return expressionNode;
+    }
+
+    private Variable parseVariable(TinyBasicParserContext context) throws TinyBasicParseException {
+        return switch (context.poll()) {
+            case VariableToken variableToken -> variableToken.getVariable();
+            case Token token -> throw new TinyBasicParseException("Expected variable, found '%s'!".formatted(token.getLexeme()), token.getSourcePosition());
+        };
     }
 
     private void consumeRemainingTokens(TinyBasicParserContext context) {
