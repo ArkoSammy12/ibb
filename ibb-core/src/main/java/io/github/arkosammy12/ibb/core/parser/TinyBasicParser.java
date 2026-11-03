@@ -27,7 +27,7 @@ public final class TinyBasicParser {
 
     private LineNode parseLine(TinyBasicParserContext context) throws TinyBasicParseException {
         Token lineNumberToken = context.peek();
-        Long lineNumber = null;
+        Integer lineNumber = null;
         if (lineNumberToken instanceof NumberToken numberToken) {
             context.poll();
             if (numberToken.getValue() >= 0) {

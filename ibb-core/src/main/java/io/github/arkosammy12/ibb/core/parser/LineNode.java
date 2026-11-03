@@ -1,13 +1,13 @@
 package io.github.arkosammy12.ibb.core.parser;
 
-import java.util.OptionalLong;
+import java.util.OptionalInt;
 
 public class LineNode {
 
-    private final Long lineNumber;
+    private final Integer lineNumber;
     private final StatementNode statementNode;
 
-    public LineNode(Long lineNumber, StatementNode statementNode) {
+    public LineNode(Integer lineNumber, StatementNode statementNode) {
         if (lineNumber != null && lineNumber < 0) {
             throw new IllegalArgumentException("Line node line number '%d' cannot be negative!".formatted(lineNumber));
         }
@@ -15,8 +15,8 @@ public class LineNode {
         this.statementNode = statementNode;
     }
 
-    public OptionalLong getLineNumber() {
-        return this.lineNumber == null ? OptionalLong.empty() : OptionalLong.of(this.lineNumber);
+    public OptionalInt getLineNumber() {
+        return this.lineNumber == null ? OptionalInt.empty() : OptionalInt.of(this.lineNumber);
     }
 
     public StatementNode getStatementNode() {

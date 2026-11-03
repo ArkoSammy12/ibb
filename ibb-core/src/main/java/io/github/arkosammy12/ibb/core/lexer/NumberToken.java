@@ -4,9 +4,9 @@ import io.github.arkosammy12.ibb.core.util.SourcePosition;
 
 public final class NumberToken extends Token {
 
-    private final long value;
+    private final int value;
 
-    public NumberToken(SourcePosition sourcePosition, long value) {
+    public NumberToken(SourcePosition sourcePosition, int value) {
         super(sourcePosition);
         this.value = value;
     }
@@ -16,7 +16,7 @@ public final class NumberToken extends Token {
         return String.valueOf(this.value);
     }
 
-    public long getValue() {
+    public int getValue() {
         return this.value;
     }
 

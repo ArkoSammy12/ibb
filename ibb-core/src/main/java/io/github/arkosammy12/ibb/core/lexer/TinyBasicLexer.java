@@ -106,7 +106,7 @@ public final class TinyBasicLexer {
         while (isDigit(context.peek().character())) {
             lexemeBuilder.append(context.poll().character());
         }
-        return new NumberToken(numberCharacter.sourcePosition(), Long.parseLong(lexemeBuilder.toString()));
+        return new NumberToken(numberCharacter.sourcePosition(), Integer.parseInt(lexemeBuilder.toString()));
     }
 
     private static boolean isDigit(Character character) {
