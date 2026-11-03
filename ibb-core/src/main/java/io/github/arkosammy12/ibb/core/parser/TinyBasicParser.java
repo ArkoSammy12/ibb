@@ -36,12 +36,17 @@ public final class TinyBasicParser {
                 throw new TinyBasicParseException("The line number '%d' cannot be negative!".formatted(numberToken.getValue()), numberToken.getSourcePosition());
             }
         }
-        StatementNode statementNode = this.parseStatement(context);
+        StatementNode firstStatementNode = this.parseStatement(context);
+        Collection<StatementNode> extraStatementNodes = new ArrayList<>();
+        while (context.peek() instanceof DelimiterToken delimiterToken && delimiterToken.getDelimiter() == Delimiter.COLON) {
+            context.poll();
+            extraStatementNodes.add(this.parseStatement(context));
+        }
         Token trailingToken = context.peek();
         if (!(trailingToken instanceof EndOfLineToken)) {
             throw new TinyBasicParseException("Trailing line token '%s'!".formatted(trailingToken.getLexeme()), trailingToken.getSourcePosition());
         }
-        return new LineNode(lineNumber, statementNode);
+        return new LineNode(lineNumber, firstStatementNode, extraStatementNodes);
     }
 
     private StatementNode parseStatement(TinyBasicParserContext context) throws TinyBasicParseException {
@@ -50,6 +55,12 @@ public final class TinyBasicParser {
             case ArraySigilToken _ -> this.parseVariableAssignment(context, new AssignmentTargetNode.ArrayElementTarget(this.parseParenthesizedExpression(context, "array reference expression")));
             case KeywordToken keywordToken -> switch (keywordToken.getKeyword()) {
                 case PRINT -> new StatementNode.Print(this.parseExpressionListNode(context), this.parseExpressionList(context));
+                case GOTO -> new StatementNode.Goto(this.parseExpression(context));
+                case INPUT -> new StatementNode.Input(this.parseAssignmentTarget(context), this.parseAssignmentTargetList(context));
+                case LET -> this.parseVariableAssignment(context, this.parseAssignmentTarget(context));
+                case GOSUB -> new StatementNode.Gosub(this.parseExpression(context));
+                case RETURN -> new StatementNode.Return();
+                case END -> new StatementNode.End();
                 case IF -> {
                     ExpressionNode lhs = this.parseExpression(context);
                     StatementNode.If.RelationalOperation relationalOperation = switch (context.poll()) {
@@ -72,12 +83,6 @@ public final class TinyBasicParser {
                     StatementNode statementNode = this.parseStatement(context);
                     yield new StatementNode.If(relationalOperation, lhs, rhs, statementNode);
                 }
-                case GOTO -> new StatementNode.Goto(this.parseExpression(context));
-                case INPUT -> new StatementNode.Input(this.parseAssignmentTarget(context), this.parseAssignmentTargetList(context));
-                case LET -> this.parseVariableAssignment(context, this.parseAssignmentTarget(context));
-                case GOSUB -> new StatementNode.Gosub(this.parseExpression(context));
-                case RETURN -> new StatementNode.Return();
-                case END -> new StatementNode.End();
                 default -> throw new TinyBasicParseException("Illegal start of statement '%s'!".formatted(keywordToken.getLexeme()), keywordToken.getSourcePosition());
             };
             case EndOfLineToken endOfLineToken -> throw new TinyBasicParseException("Expected start of statement!", endOfLineToken.getSourcePosition());

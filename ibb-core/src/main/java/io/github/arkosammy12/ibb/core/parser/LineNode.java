@@ -1,31 +1,35 @@
 package io.github.arkosammy12.ibb.core.parser;
 
+import java.util.Collection;
 import java.util.OptionalInt;
+import java.util.stream.Collectors;
 
 public class LineNode {
 
     private final Integer lineNumber;
-    private final StatementNode statementNode;
+    private final StatementNode firstStatementNode;
+    private final Collection<StatementNode> extraStatementNodes;
 
-    public LineNode(Integer lineNumber, StatementNode statementNode) {
+    public LineNode(Integer lineNumber, StatementNode firstStatementNode, Collection<StatementNode> extraStatementNodes) {
         if (lineNumber != null && lineNumber < 0) {
             throw new IllegalArgumentException("Line node line number '%d' cannot be negative!".formatted(lineNumber));
         }
         this.lineNumber = lineNumber;
-        this.statementNode = statementNode;
+        this.firstStatementNode = firstStatementNode;
+        this.extraStatementNodes = extraStatementNodes;
     }
 
     public OptionalInt getLineNumber() {
         return this.lineNumber == null ? OptionalInt.empty() : OptionalInt.of(this.lineNumber);
     }
 
-    public StatementNode getStatementNode() {
-        return this.statementNode;
+    public StatementNode getFirstStatementNode() {
+        return this.firstStatementNode;
     }
 
     @Override
     public String toString() {
-        return "LineNode[lineNumber=%s, statement=%s]".formatted(this.lineNumber == null ? "" : this.lineNumber, this.statementNode);
+        return "LineNode[lineNumber=%s, firstStatement=%s, extraStatements=[%s]]".formatted(this.lineNumber == null ? "" : this.lineNumber, this.firstStatementNode, this.extraStatementNodes.stream().map(StatementNode::toString).collect(Collectors.joining(", ")));
     }
 
 }

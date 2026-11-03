@@ -3,7 +3,8 @@ package io.github.arkosammy12.ibb.core.grammar;
 public enum Delimiter implements Lexeme {
     LEFT_PARENTHESIS("("),
     RIGHT_PARENTHESIS(")"),
-    COMMA(",");
+    COMMA(","),
+    COLON(":");
 
     private final String pattern;
 
