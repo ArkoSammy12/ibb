@@ -49,7 +49,7 @@ public final class TinyBasicParser {
             case VariableToken variableToken -> this.parseVariableAssignment(context, new AssignmentTargetNode.VariableTarget(variableToken.getVariable()));
             case ArraySigilToken _ -> this.parseVariableAssignment(context, new AssignmentTargetNode.ArrayElementTarget(this.parseParenthesizedExpression(context, "array reference expression")));
             case KeywordToken keywordToken -> switch (keywordToken.getKeyword()) {
-                case PRINT -> new StatementNode.Print(this.parseExpressionList(context));
+                case PRINT -> new StatementNode.Print(this.parseExpressionListNode(context), this.parseExpressionList(context));
                 case IF -> {
                     ExpressionNode lhs = this.parseExpression(context);
                     StatementNode.If.RelationalOperation relationalOperation = switch (context.poll()) {
@@ -73,7 +73,7 @@ public final class TinyBasicParser {
                     yield new StatementNode.If(relationalOperation, lhs, rhs, statementNode);
                 }
                 case GOTO -> new StatementNode.Goto(this.parseExpression(context));
-                case INPUT -> new StatementNode.Input(this.parseAssignmentTargetList(context));
+                case INPUT -> new StatementNode.Input(this.parseAssignmentTarget(context), this.parseAssignmentTargetList(context));
                 case LET -> this.parseVariableAssignment(context, this.parseAssignmentTarget(context));
                 case GOSUB -> new StatementNode.Gosub(this.parseExpression(context));
                 case RETURN -> new StatementNode.Return();
@@ -96,7 +96,6 @@ public final class TinyBasicParser {
 
     private Collection<ExpressionListNode> parseExpressionList(TinyBasicParserContext context) throws TinyBasicParseException {
         Collection<ExpressionListNode> expressionListNodes = new ArrayList<>();
-        expressionListNodes.add(this.parseExpressionListNode(context));
         while (context.peek() instanceof DelimiterToken delimiterToken && delimiterToken.getDelimiter() == Delimiter.COMMA) {
             context.poll();
             expressionListNodes.add(this.parseExpressionListNode(context));
@@ -115,7 +114,6 @@ public final class TinyBasicParser {
 
     private Collection<AssignmentTargetNode> parseAssignmentTargetList(TinyBasicParserContext context) throws TinyBasicParseException {
         Collection<AssignmentTargetNode> assignmentTargetNodes = new ArrayList<>();
-        assignmentTargetNodes.add(this.parseAssignmentTarget(context));
         while (context.peek() instanceof DelimiterToken delimiterToken && delimiterToken.getDelimiter() == Delimiter.COMMA) {
             context.poll();
             assignmentTargetNodes.add(this.parseAssignmentTarget(context));

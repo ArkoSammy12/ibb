@@ -4,7 +4,7 @@ import java.util.Collection;
 
 public sealed interface StatementNode {
 
-    record Print(Collection<ExpressionListNode> expressionListNodes) implements StatementNode {}
+    record Print(ExpressionListNode firstExpressionListNode, Collection<ExpressionListNode> extraExpressionListNodes) implements StatementNode {}
 
     record If(RelationalOperation relationalOperation, ExpressionNode lhs, ExpressionNode rhs, StatementNode statementNode) implements StatementNode {
 
@@ -21,7 +21,7 @@ public sealed interface StatementNode {
 
     record Goto(ExpressionNode expressionNode) implements StatementNode {}
 
-    record Input(Collection<AssignmentTargetNode> variableNodes) implements StatementNode {}
+    record Input(AssignmentTargetNode firstAssignmentTargetNode, Collection<AssignmentTargetNode> extraAssignmentTargetNodes) implements StatementNode {}
 
     record VariableAssignment(AssignmentTargetNode assignmentTargetNode, ExpressionNode expressionNode) implements StatementNode {}
 
