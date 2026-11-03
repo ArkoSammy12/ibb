@@ -23,10 +23,6 @@ final class TinyBasicParserContext {
         return token == null ? new EndOfLineToken(new SourcePosition(0, 0)) : token;
     }
 
-    SourcePosition peekSourcePosition() {
-        return this.tokenStream.peek().map(Token::getSourcePosition).orElseGet(() -> new SourcePosition(0, 0));
-    }
-
     boolean hasTokens() {
         return !this.tokenStream.isEmpty();
     }
