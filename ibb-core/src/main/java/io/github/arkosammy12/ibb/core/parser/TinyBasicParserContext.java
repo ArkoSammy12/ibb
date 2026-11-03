@@ -21,7 +21,7 @@ final class TinyBasicParserContext {
     }
 
     SourcePosition peekSourcePosition() {
-        return this.tokenStream.peek().map(Token::getSourcePosition).orElse(null);
+        return this.tokenStream.peek().map(Token::getSourcePosition).orElseGet(() -> new SourcePosition(0, 0));
     }
 
     boolean hasTokens() {

@@ -21,9 +21,9 @@ public sealed interface StatementNode {
 
     record Goto(ExpressionNode expressionNode) implements StatementNode {}
 
-    record Input(Collection<ExpressionNode.VariableNode> variableNodes) implements StatementNode {}
+    record Input(Collection<AssignmentTargetNode> variableNodes) implements StatementNode {}
 
-    record VariableAssignment(ExpressionNode.VariableNode variableNode, ExpressionNode expressionNode) implements StatementNode {}
+    record VariableAssignment(AssignmentTargetNode assignmentTargetNode, ExpressionNode expressionNode) implements StatementNode {}
 
     record Gosub(ExpressionNode expressionNode) implements StatementNode {}
 

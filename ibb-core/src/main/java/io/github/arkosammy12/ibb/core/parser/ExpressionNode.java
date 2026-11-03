@@ -15,6 +15,15 @@ public sealed interface ExpressionNode extends ExpressionListNode {
 
     }
 
+    record ArrayReferenceNode(PrefixOperator prefixOperator, ExpressionNode expressionNode) implements ExpressionNode {
+
+        @Override
+        public PrefixOperator getPrefixOperator() {
+            return this.prefixOperator();
+        }
+
+    }
+
     record NumberNode(PrefixOperator prefixOperator, int value) implements ExpressionNode {
 
         @Override

@@ -34,6 +34,10 @@ public final class TinyBasicLexer {
                     context.addToken(this.lexString(context, sourceCharacter));
                     continue;
                 }
+                if (sourceCharacter.character() == '@') {
+                    context.addToken(new ArraySigilToken(sourceCharacter.sourcePosition()));
+                    continue;
+                }
                 if (this.lexToken(context, sourceCharacter, Keyword.class, KeywordToken::new)) {
                     continue;
                 }
