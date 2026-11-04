@@ -99,10 +99,10 @@ public final class TinyBasicParser {
         };
     }
 
-    private StatementNode.VariableAssignment parseVariableAssignment(TinyBasicParserContext context, AssignmentTargetNode assignmentTargetNode) throws TinyBasicParseException {
+    private StatementNode.Assignment parseVariableAssignment(TinyBasicParserContext context, AssignmentTargetNode assignmentTargetNode) throws TinyBasicParseException {
         this.expect(context, middleToken -> middleToken instanceof OperatorToken operatorToken && operatorToken.getOperator() == Operator.EQUALS, "assignment operator '='");
         NumericExpressionNode numericExpressionNode = this.parseAndExpectNumericExpression(context);
-        return new StatementNode.VariableAssignment(assignmentTargetNode, numericExpressionNode);
+        return new StatementNode.Assignment(assignmentTargetNode, numericExpressionNode);
     }
 
     private Collection<StatementNode.Print.Element> parsePrintElements(TinyBasicParserContext context) throws TinyBasicParseException {

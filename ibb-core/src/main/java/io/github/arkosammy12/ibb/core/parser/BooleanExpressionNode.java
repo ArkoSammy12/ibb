@@ -13,6 +13,11 @@ public sealed interface BooleanExpressionNode extends ExpressionNode {
         NOT
     }
 
+    enum BinaryOperator {
+        OR,
+        AND
+    }
+
     enum RelationalOperation {
         LESS_THAN,
         LESS_THAN_OR_EQUALS,
@@ -20,11 +25,6 @@ public sealed interface BooleanExpressionNode extends ExpressionNode {
         GREATER_THAN_OR_EQUALS,
         EQUALS,
         NOT_EQUALS
-    }
-
-    enum BinaryOperator {
-        OR,
-        AND
     }
 
 }

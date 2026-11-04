@@ -6,7 +6,6 @@ import io.github.arkosammy12.ibb.core.result.ParseResult;
 import io.github.arkosammy12.ibb.core.util.SourceCharacter;
 import io.github.arkosammy12.ibb.core.util.SourcePosition;
 import io.github.arkosammy12.ibb.core.util.SourceStream;
-import io.github.arkosammy12.ibb.core.util.TriFunction;
 
 import java.util.Collection;
 import java.util.Optional;
@@ -66,7 +65,7 @@ public final class TinyBasicLexer {
         }
     }
 
-    private <T extends Enum<T> & Lexeme> boolean lexToken(TinyBasicLexerContext context, SourceCharacter firstLetterCharacter, Class<T> lexemeClass, TriFunction<SourcePosition, T, String, Token> tokenFunction) {
+    private <T extends Enum<T> & Lexeme> boolean lexToken(TinyBasicLexerContext context, SourceCharacter firstLetterCharacter, Class<T> lexemeClass, TokenFunction<T> tokenFunction) {
         if (firstLetterCharacter.character() == null) {
             return false;
         }
@@ -92,7 +91,7 @@ public final class TinyBasicLexer {
         Optional<T> token = Lexeme.getMatchingLexeme(lexemeClass, lexeme);
 
         if (token.isPresent()) {
-            context.addToken(tokenFunction.apply(firstLetterCharacter.sourcePosition(), token.get(), lexeme));
+            context.addToken(tokenFunction.createToken(firstLetterCharacter.sourcePosition(), token.get(), lexeme));
             return true;
         } else {
             // If our stack is non-empty, we could have consumed a pattern that matches a built-in pattern,
@@ -105,7 +104,7 @@ public final class TinyBasicLexer {
                 String backtrackedLexeme = sb.toString();
                 Optional<T> backtrackedToken = Lexeme.getMatchingLexeme(lexemeClass, backtrackedLexeme);
                 if (backtrackedToken.isPresent()) {
-                    context.addToken(tokenFunction.apply(firstLetterCharacter.sourcePosition(), backtrackedToken.get(), backtrackedLexeme));
+                    context.addToken(tokenFunction.createToken(firstLetterCharacter.sourcePosition(), backtrackedToken.get(), backtrackedLexeme));
                     return true;
                 }
             }
@@ -141,6 +140,12 @@ public final class TinyBasicLexer {
 
     private static boolean isWhitespace(Character character) {
         return character != null && Character.isWhitespace(character);
+    }
+
+    private interface TokenFunction<T extends Enum<T> & Lexeme> {
+
+        Token createToken(SourcePosition sourcePosition, T tokenClass, String lexeme);
+
     }
 
 }

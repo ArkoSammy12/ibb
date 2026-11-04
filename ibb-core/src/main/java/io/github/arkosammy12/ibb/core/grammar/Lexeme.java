@@ -3,13 +3,14 @@ package io.github.arkosammy12.ibb.core.grammar;
 import java.util.Locale;
 import java.util.Optional;
 
-public interface Lexeme {
+public sealed interface Lexeme permits Delimiter, Keyword, Operator, Variable {
 
     String getPattern();
 
     static <T extends Enum<T> & Lexeme> boolean isPatternBeginningOfKeyword(Class<T> enumClass, String pattern) {
+        String lowercasedPattern = pattern.toLowerCase(Locale.ROOT);
         for (T lexeme : enumClass.getEnumConstants()) {
-            if (lexeme.getPattern().startsWith(pattern.toLowerCase(Locale.ROOT))) {
+            if (lexeme.getPattern().startsWith(lowercasedPattern)) {
                 return true;
             }
         }

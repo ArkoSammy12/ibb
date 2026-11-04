@@ -24,7 +24,7 @@ public sealed interface NumericExpressionNode extends ExpressionNode, NumericExp
 
     }
 
-    record ArrayReferenceNode(UnaryOperator unaryOperator, NumericExpressionNode numericExpressionNode) implements NumericExpressionNode {
+    record ArrayReferenceNode(UnaryOperator unaryOperator, NumericExpressionNode arrayIndexExpression) implements NumericExpressionNode {
 
         @Override
         public UnaryOperator getUnaryOperator() {
@@ -33,7 +33,7 @@ public sealed interface NumericExpressionNode extends ExpressionNode, NumericExp
 
     }
 
-    record AbsFunctionNode(UnaryOperator unaryOperator, NumericExpressionNode numericExpressionNode) implements NumericExpressionNode {
+    record AbsFunctionNode(UnaryOperator unaryOperator, NumericExpressionNode argumentExpression) implements NumericExpressionNode {
 
         @Override
         public UnaryOperator getUnaryOperator() {
@@ -42,7 +42,7 @@ public sealed interface NumericExpressionNode extends ExpressionNode, NumericExp
 
     }
 
-    record AscFunctionNode(UnaryOperator unaryOperator, String contents) implements NumericExpressionNode {
+    record AscFunctionNode(UnaryOperator unaryOperator, String argumentString) implements NumericExpressionNode {
 
         @Override
         public UnaryOperator getUnaryOperator() {
@@ -51,7 +51,7 @@ public sealed interface NumericExpressionNode extends ExpressionNode, NumericExp
 
     }
 
-    record RndFunctionNode(UnaryOperator unaryOperator, NumericExpressionNode numericExpressionNode) implements NumericExpressionNode {
+    record RndFunctionNode(UnaryOperator unaryOperator, NumericExpressionNode argumentExpression) implements NumericExpressionNode {
 
         @Override
         public UnaryOperator getUnaryOperator() {
@@ -60,7 +60,7 @@ public sealed interface NumericExpressionNode extends ExpressionNode, NumericExp
 
     }
 
-    record SgnFunctionNode(UnaryOperator unaryOperator, NumericExpressionNode numericExpressionNode) implements NumericExpressionNode {
+    record SgnFunctionNode(UnaryOperator unaryOperator, NumericExpressionNode argumentExpression) implements NumericExpressionNode {
 
         @Override
         public UnaryOperator getUnaryOperator() {
@@ -69,7 +69,7 @@ public sealed interface NumericExpressionNode extends ExpressionNode, NumericExp
 
     }
 
-    record SubExpressionNode(UnaryOperator unaryOperator, NumericExpressionNode numericExpressionNode) implements NumericExpressionNode {
+    record SubExpressionNode(UnaryOperator unaryOperator, NumericExpressionNode argumentExpression) implements NumericExpressionNode {
 
         @Override
         public UnaryOperator getUnaryOperator() {

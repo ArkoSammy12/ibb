@@ -9,19 +9,19 @@ import java.util.stream.Collectors;
 
 public sealed interface StatementNode {
 
-    record VariableAssignment(AssignmentTargetNode assignmentTargetNode, NumericExpressionNode numericExpressionNode) implements StatementNode {}
+    record Assignment(AssignmentTargetNode assignmentTargetNode, NumericExpressionNode numericExpressionNode) implements StatementNode {}
 
-    record Goto(NumericExpressionNode numericExpressionNode) implements StatementNode {}
+    record Goto(NumericExpressionNode targetExpression) implements StatementNode {}
 
-    record GoSub(NumericExpressionNode numericExpressionNode) implements StatementNode {}
+    record GoSub(NumericExpressionNode targetExpression) implements StatementNode {}
 
     record Return() implements StatementNode {}
 
-    record If(BooleanExpressionNode conditionalExpressionNode, StatementNode statementNode) implements StatementNode {}
+    record If(BooleanExpressionNode conditionalExpression, StatementNode statement) implements StatementNode {}
 
-    record For(Variable variable, NumericExpressionNode startingNumericExpressionNodeValue, NumericExpressionNode finalNumericExpressionNodeValue) implements StatementNode {}
+    record For(Variable loopVariable, NumericExpressionNode startingExpressionValue, NumericExpressionNode finalExpressionValue) implements StatementNode {}
 
-    record Next(Variable variable) implements StatementNode {}
+    record Next(Variable loopVariable) implements StatementNode {}
 
     record Rem() implements StatementNode {}
 
@@ -69,7 +69,7 @@ public sealed interface StatementNode {
 
         @Override
         public String toString() {
-            return "Input[prompt=%s, firstAssignmentTargetNode=%s, extraAssignmentTargetNodes=[%s]]".formatted(this.prompt == null ? "none" : this.prompt, this.firstAssignmentTargetNode.toString(), this.extraAssignmentTargetNodes.stream().map(AssignmentTargetNode::toString).collect(Collectors.joining(", ")));
+            return "Input[prompt=%s, firstAssignmentTargetNode=%s, extraAssignmentTargetNodes=[%s]]".formatted(this.prompt == null ? "" : this.prompt, this.firstAssignmentTargetNode.toString(), this.extraAssignmentTargetNodes.stream().map(AssignmentTargetNode::toString).collect(Collectors.joining(", ")));
         }
 
     }
