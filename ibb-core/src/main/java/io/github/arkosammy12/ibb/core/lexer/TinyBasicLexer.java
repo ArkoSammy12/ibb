@@ -55,6 +55,9 @@ public final class TinyBasicLexer {
                     context.addToken(new KeywordToken(sourceCharacter.sourcePosition(), Keyword.REM, "'"));
                     continue;
                 }
+                if (isWhitespace(sourceCharacter.character())) {
+                    continue;
+                }
                 return new ParseResult.Error<>(new TinyBasicLexError("Unknown token '%s'!".formatted(sourceCharacter.character()), sourceCharacter.sourcePosition()));
             }
             return new ParseResult.Ok<>(new TinyBasicLexValue(context.getTokenStream()));
@@ -111,14 +114,12 @@ public final class TinyBasicLexer {
     }
 
     private StringToken lexString(TinyBasicLexerContext context, SourceCharacter leftDoubleQuoteCharacter) throws TinyBasicParseException {
-        context.setLexingStringToken(true);
         StringBuilder sb = new StringBuilder();
         sb.append(leftDoubleQuoteCharacter.character());
         while (context.hasCharacters()) {
             SourceCharacter sourceCharacter = context.poll();
             sb.append(sourceCharacter.character());
             if (sourceCharacter.character() == '"') {
-                context.setLexingStringToken(false);
                 return new StringToken(leftDoubleQuoteCharacter.sourcePosition(), sb.toString());
             }
         }
@@ -136,6 +137,10 @@ public final class TinyBasicLexer {
 
     private static boolean isDigit(Character character) {
         return character != null && Character.isDigit(character);
+    }
+
+    private static boolean isWhitespace(Character character) {
+        return character != null && Character.isWhitespace(character);
     }
 
 }
