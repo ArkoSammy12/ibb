@@ -4,6 +4,8 @@ import io.github.arkosammy12.ibb.core.grammar.Variable;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 public sealed interface StatementNode {
 
@@ -33,10 +35,33 @@ public sealed interface StatementNode {
 
     }
 
-    record Input(AssignmentTargetNode firstAssignmentTargetNode, Collection<AssignmentTargetNode> extraAssignmentTargetNodes) implements StatementNode {
+    final class Input implements StatementNode {
 
-        public Input {
-            extraAssignmentTargetNodes = List.copyOf(extraAssignmentTargetNodes);
+        private final String prompt;
+        private final AssignmentTargetNode firstAssignmentTargetNode;
+        private final Collection<AssignmentTargetNode> extraAssignmentTargetNodes;
+
+        public Input(String prompt, AssignmentTargetNode firstAssignmentTargetNode, Collection<AssignmentTargetNode> extraAssignmentTargetNodes) {
+            this.prompt = prompt;
+            this.firstAssignmentTargetNode = firstAssignmentTargetNode;
+            this.extraAssignmentTargetNodes = List.copyOf(extraAssignmentTargetNodes);
+        }
+
+        public Optional<String> getPrompt() {
+            return Optional.ofNullable(this.prompt);
+        }
+
+        public AssignmentTargetNode getFirstAssignmentTargetNode() {
+            return this.firstAssignmentTargetNode;
+        }
+
+        public Collection<AssignmentTargetNode> getExtraAssignmentTargetNodes() {
+            return this.extraAssignmentTargetNodes;
+        }
+
+        @Override
+        public String toString() {
+            return "Input[prompt=%s, firstAssignmentTargetNode=%s, extraAssignmentTargetNodes=[%s]]".formatted(this.prompt == null ? "none" : this.prompt, this.firstAssignmentTargetNode.toString(), this.extraAssignmentTargetNodes.stream().map(AssignmentTargetNode::toString).collect(Collectors.joining(", ")));
         }
 
     }

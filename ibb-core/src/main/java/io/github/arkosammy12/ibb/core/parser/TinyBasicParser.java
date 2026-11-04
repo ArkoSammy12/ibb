@@ -60,7 +60,6 @@ public final class TinyBasicParser {
             case KeywordToken keywordToken -> switch (keywordToken.getKeyword()) {
                 case PRINT -> new StatementNode.Print(this.parseNumericExpressionListNode(context), this.parseNumericExpressionList(context));
                 case GOTO -> new StatementNode.Goto(this.parseAndExpectNumericExpression(context));
-                case INPUT -> new StatementNode.Input(this.parseAssignmentTarget(context), this.parseAssignmentTargetList(context));
                 case LET -> this.parseVariableAssignment(context, this.parseAssignmentTarget(context));
                 case GOSUB -> new StatementNode.GoSub(this.parseAndExpectNumericExpression(context));
                 case RETURN -> new StatementNode.Return();
@@ -69,6 +68,15 @@ public final class TinyBasicParser {
                 case REM -> {
                     this.consumeRemainingTokens(context);
                     yield new StatementNode.Rem();
+                }
+                case INPUT -> {
+                    String prompt = null;
+                    if (context.peek() instanceof StringToken promptToken) {
+                        context.poll();
+                        prompt = promptToken.getContents();
+                        this.expect(context, token -> token instanceof DelimiterToken delimiterToken && delimiterToken.getDelimiter() == Delimiter.COMMA, "comma after 'input' prompt");
+                    }
+                    yield new StatementNode.Input(prompt, this.parseAssignmentTarget(context), this.parseAssignmentTargetList(context));
                 }
                 case IF -> {
                     BooleanExpressionNode conditionalExpressionNode = this.parseAndExpectBooleanExpression(context);
