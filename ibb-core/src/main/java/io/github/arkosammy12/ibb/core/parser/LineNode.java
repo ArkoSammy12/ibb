@@ -1,6 +1,7 @@
 package io.github.arkosammy12.ibb.core.parser;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.OptionalInt;
 import java.util.stream.Collectors;
 
@@ -16,7 +17,7 @@ public final class LineNode {
         }
         this.lineNumber = lineNumber;
         this.firstStatementNode = firstStatementNode;
-        this.extraStatementNodes = extraStatementNodes;
+        this.extraStatementNodes = List.copyOf(extraStatementNodes);
     }
 
     public OptionalInt getLineNumber() {
@@ -25,6 +26,10 @@ public final class LineNode {
 
     public StatementNode getFirstStatementNode() {
         return this.firstStatementNode;
+    }
+
+    public Collection<StatementNode> getExtraStatementNodes() {
+        return this.extraStatementNodes;
     }
 
     @Override

@@ -12,7 +12,10 @@ public enum Operator implements Lexeme {
     GREATER_THAN_OR_EQUALS(">="),
     NOT_EQUALS_CONVERGENT("><"),
     NOT_EQUALS_DIVERGENT("<>"),
-    EQUALS("=");
+    EQUALS("="),
+    NOT("not"),
+    AND("and"),
+    OR("or");
 
     private final String pattern;
 
