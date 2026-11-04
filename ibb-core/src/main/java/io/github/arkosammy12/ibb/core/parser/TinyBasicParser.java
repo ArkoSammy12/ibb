@@ -322,7 +322,7 @@ public final class TinyBasicParser {
         NumericExpressionNode.BinaryOperationExpressionNode.Operator operator = switch (nextToken) {
             case OperatorToken operatorToken -> switch (operatorToken.getOperator()) {
                 case TIMES -> NumericExpressionNode.BinaryOperationExpressionNode.Operator.MULTIPLY;
-                case DIVIDE -> NumericExpressionNode.BinaryOperationExpressionNode.Operator.DIVIDE;
+                case DIVIDE_FORWARD, DIVIDE_BACKWARD -> NumericExpressionNode.BinaryOperationExpressionNode.Operator.DIVIDE;
                 case MOD -> NumericExpressionNode.BinaryOperationExpressionNode.Operator.MODULO;
                 default -> null;
             };
