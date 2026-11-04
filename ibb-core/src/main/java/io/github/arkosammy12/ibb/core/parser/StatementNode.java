@@ -27,10 +27,18 @@ public sealed interface StatementNode {
 
     record End() implements StatementNode {}
 
-    record Print(NumericExpressionListNode firstNumericExpressionListNode, Collection<NumericExpressionListNode> extraNumericExpressionListNodes) implements StatementNode {
+    record Print(Element firstPrintElement, Collection<Element> extraPrintElements) implements StatementNode {
 
         public Print {
-            extraNumericExpressionListNodes = List.copyOf(extraNumericExpressionListNodes);
+            extraPrintElements = List.copyOf(extraPrintElements);
+        }
+
+        public record Element(NumericExpressionListNode numericExpressionListNode, FormattingDelimiter suffixDelimiter) {}
+
+        public enum FormattingDelimiter {
+            COMMA,
+            SEMICOLON,
+            NONE
         }
 
     }

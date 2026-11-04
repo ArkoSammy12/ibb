@@ -58,7 +58,7 @@ public final class TinyBasicParser {
             case VariableToken variableToken -> this.parseVariableAssignment(context, new AssignmentTargetNode.VariableTarget(variableToken.getVariable()));
             case ArraySigilToken _ -> this.parseVariableAssignment(context, new AssignmentTargetNode.ArrayElementTarget(this.parseParenthesizedNumericExpression(context, "array reference expression")));
             case KeywordToken keywordToken -> switch (keywordToken.getKeyword()) {
-                case PRINT -> new StatementNode.Print(this.parseNumericExpressionListNode(context), this.parseNumericExpressionList(context));
+                case PRINT -> new StatementNode.Print(this.parsePrintElement(context), this.parsePrintElements(context));
                 case GOTO -> new StatementNode.Goto(this.parseAndExpectNumericExpression(context));
                 case LET -> this.parseVariableAssignment(context, this.parseAssignmentTarget(context));
                 case GOSUB -> new StatementNode.GoSub(this.parseAndExpectNumericExpression(context));
@@ -105,22 +105,41 @@ public final class TinyBasicParser {
         return new StatementNode.VariableAssignment(assignmentTargetNode, numericExpressionNode);
     }
 
-    private Collection<NumericExpressionListNode> parseNumericExpressionList(TinyBasicParserContext context) throws TinyBasicParseException {
-        Collection<NumericExpressionListNode> numericExpressionListNodes = new ArrayList<>();
-        while (context.peek() instanceof DelimiterToken numericExpressionListDelimiterToken && numericExpressionListDelimiterToken.getDelimiter() == Delimiter.COMMA) {
+    private Collection<StatementNode.Print.Element> parsePrintElements(TinyBasicParserContext context) throws TinyBasicParseException {
+        Collection<StatementNode.Print.Element> extraPrintElements = new ArrayList<>();
+        expressionLoop: while (context.peek() instanceof DelimiterToken upcomingDelimiterToken && (upcomingDelimiterToken.getDelimiter() == Delimiter.COMMA || upcomingDelimiterToken.getDelimiter() == Delimiter.SEMICOLON)) {
             context.poll();
-            numericExpressionListNodes.add(this.parseNumericExpressionListNode(context));
+            switch (context.peek()) {
+                case DelimiterToken delimiterToken when delimiterToken.getDelimiter() == Delimiter.COLON -> {
+                    break expressionLoop;
+                }
+                case EndOfLineToken _ -> {
+                    break expressionLoop;
+                }
+                default -> {}
+            }
+            extraPrintElements.add(this.parsePrintElement(context));
         }
-        return numericExpressionListNodes;
+        return extraPrintElements;
     }
 
-    private NumericExpressionListNode parseNumericExpressionListNode(TinyBasicParserContext context) throws TinyBasicParseException {
-        Token upcomingToken = context.peek();
-        if (upcomingToken instanceof StringToken stringToken) {
-            context.poll();
-            return new StringNode(stringToken.getContents());
-        }
-        return this.parseAndExpectNumericExpression(context);
+    private StatementNode.Print.Element parsePrintElement(TinyBasicParserContext context) throws TinyBasicParseException {
+        NumericExpressionListNode numericExpressionListNode = switch (context.peek()) {
+            case StringToken stringToken -> {
+                context.poll();
+                yield new StringNode(stringToken.getContents());
+            }
+            default -> this.parseAndExpectNumericExpression(context);
+        };
+        StatementNode.Print.FormattingDelimiter formattingDelimiter = switch (context.peek()) {
+            case DelimiterToken delimiterToken -> switch (delimiterToken.getDelimiter()) {
+                case COMMA -> StatementNode.Print.FormattingDelimiter.COMMA;
+                case SEMICOLON -> StatementNode.Print.FormattingDelimiter.SEMICOLON;
+                default -> StatementNode.Print.FormattingDelimiter.NONE;
+            };
+            default -> StatementNode.Print.FormattingDelimiter.NONE;
+        };
+        return new StatementNode.Print.Element(numericExpressionListNode, formattingDelimiter);
     }
 
     private Collection<AssignmentTargetNode> parseAssignmentTargetList(TinyBasicParserContext context) throws TinyBasicParseException {
