@@ -1,5 +1,6 @@
 package io.github.arkosammy12.ibb.core.lexer;
 
+import io.github.arkosammy12.ibb.core.grammar.Keyword;
 import io.github.arkosammy12.ibb.core.util.SourceCharacter;
 import io.github.arkosammy12.ibb.core.util.SourcePosition;
 import io.github.arkosammy12.ibb.core.util.SourceStream;
@@ -43,7 +44,13 @@ final class TinyBasicLexerContext {
     }
 
     void addToken(Token token) {
-        this.tokens.add(token);
+        if (token instanceof KeywordToken keywordToken && keywordToken.getKeyword() == Keyword.REM) {
+            while (!this.sourceCharacterStream.isEmpty()) {
+                this.sourceCharacterStream.poll();
+            }
+        } else {
+            this.tokens.add(token);
+        }
     }
 
     SourceStream<Token> getTokenStream() {
