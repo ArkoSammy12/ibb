@@ -216,7 +216,7 @@ public final class TinyBasicInterpreter {
         sb.append(printed);
         switch (printElement.suffixDelimiter()) {
             case SEMICOLON -> {}
-            case NONE -> {
+            case NONE -> {  
                 sb.append('\n');
                 this.currentTerminalColumn = 0;
             }
@@ -240,11 +240,7 @@ public final class TinyBasicInterpreter {
         if (incrementAmount < 0) {
             throw new IllegalArgumentException("Cannot increment terminal column index by a negative amount!");
         }
-        int originalTerminalColumn = this.currentTerminalColumn;
-        this.currentTerminalColumn += incrementAmount;
-        if (this.currentTerminalColumn < originalTerminalColumn) {
-            throw new IllegalStateException("Increment terminal column index beyond the maximum integer value!");
-        }
+        this.currentTerminalColumn = Math.addExact(this.currentTerminalColumn, incrementAmount);
     }
 
     private boolean evaluateBooleanExpression(int lineNumber, int currentStatementIndex, BooleanExpressionNode booleanExpressionNode) throws TinyBasicInterpreterException {
