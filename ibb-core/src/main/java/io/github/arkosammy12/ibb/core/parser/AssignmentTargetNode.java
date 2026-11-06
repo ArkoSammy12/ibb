@@ -2,7 +2,7 @@ package io.github.arkosammy12.ibb.core.parser;
 
 import io.github.arkosammy12.ibb.core.grammar.Variable;
 
-public interface AssignmentTargetNode {
+public sealed interface AssignmentTargetNode {
 
     record VariableTarget(Variable variable) implements AssignmentTargetNode {}
 

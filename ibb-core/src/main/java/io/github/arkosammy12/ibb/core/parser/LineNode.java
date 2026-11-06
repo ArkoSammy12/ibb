@@ -9,7 +9,7 @@ public final class LineNode {
 
     private final Integer lineNumber;
     private final StatementNode firstStatementNode;
-    private final Collection<StatementNode> extraStatementNodes;
+    private final List<StatementNode> extraStatementNodes;
 
     public LineNode(Integer lineNumber, StatementNode firstStatementNode, Collection<StatementNode> extraStatementNodes) {
         if (lineNumber != null && lineNumber < 0) {
@@ -28,7 +28,7 @@ public final class LineNode {
         return this.firstStatementNode;
     }
 
-    public Collection<StatementNode> getExtraStatementNodes() {
+    public List<StatementNode> getExtraStatementNodes() {
         return this.extraStatementNodes;
     }
 

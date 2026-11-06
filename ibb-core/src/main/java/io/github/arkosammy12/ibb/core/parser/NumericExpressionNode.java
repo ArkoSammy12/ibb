@@ -15,7 +15,7 @@ public sealed interface NumericExpressionNode extends ExpressionNode, NumericExp
 
     }
 
-    record NumberNode(UnaryOperator unaryOperator, int value) implements NumericExpressionNode {
+    record NumberNode(UnaryOperator unaryOperator, short value) implements NumericExpressionNode {
 
         @Override
         public UnaryOperator getUnaryOperator() {
@@ -85,7 +85,7 @@ public sealed interface NumericExpressionNode extends ExpressionNode, NumericExp
             return this.unaryOperator();
         }
 
-        enum Operator {
+        public enum Operator {
             ADD,
             SUBTRACT,
             MULTIPLY,

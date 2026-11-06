@@ -19,7 +19,7 @@ public sealed interface StatementNode {
 
     record If(BooleanExpressionNode conditionalExpression, StatementNode statement) implements StatementNode {}
 
-    record For(Variable loopVariable, NumericExpressionNode startingExpressionValue, NumericExpressionNode finalExpressionValue) implements StatementNode {}
+    record For(Variable loopVariable, NumericExpressionNode startValueExpression, NumericExpressionNode endValueExpression) implements StatementNode {}
 
     record Next(Variable loopVariable) implements StatementNode {}
 

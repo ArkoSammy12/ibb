@@ -87,10 +87,10 @@ public final class TinyBasicParser {
                 case FOR -> {
                     Variable loopVariable = this.parseVariable(context);
                     this.expect(context, assignmentToken -> assignmentToken instanceof OperatorToken operatorToken && operatorToken.getOperator() == Operator.EQUALS, "assignment operator '='");
-                    NumericExpressionNode startingNumericExpressionNodeValue = this.parseAndExpectNumericExpression(context);
+                    NumericExpressionNode startValueExpression = this.parseAndExpectNumericExpression(context);
                     this.expect(context, toToken -> toToken instanceof KeywordToken toKeywordToken && toKeywordToken.getKeyword() == Keyword.TO, "range separator 'to'");
-                    NumericExpressionNode finalNumericExpressionNodeValue = this.parseAndExpectNumericExpression(context);
-                    yield new StatementNode.For(loopVariable, startingNumericExpressionNodeValue, finalNumericExpressionNodeValue);
+                    NumericExpressionNode endValueExpression = this.parseAndExpectNumericExpression(context);
+                    yield new StatementNode.For(loopVariable, startValueExpression, endValueExpression);
                 }
                 default -> throw new TinyBasicParseException("Illegal start of statement '%s'!".formatted(keywordToken.getLexeme()), keywordToken.getSourcePosition());
             };
@@ -374,7 +374,7 @@ public final class TinyBasicParser {
     private ExpressionNode parseNumericFactor(TinyBasicParserContext context, NumericExpressionNode.UnaryOperator numericUnaryOperator) throws TinyBasicParseException {
         return switch (context.poll()) {
             case VariableToken variableToken -> new NumericExpressionNode.VariableNode(numericUnaryOperator, variableToken.getVariable());
-            case NumberToken numberToken -> new NumericExpressionNode.NumberNode(numericUnaryOperator, numberToken.getValue());
+            case NumberToken numberToken -> new NumericExpressionNode.NumberNode(numericUnaryOperator, (short) numberToken.getValue());
             case ArraySigilToken _ -> new NumericExpressionNode.ArrayReferenceNode(numericUnaryOperator, this.parseParenthesizedNumericExpression(context, "array reference expression"));
             case DelimiterToken delimiterToken -> {
                 if (delimiterToken.getDelimiter() != Delimiter.LEFT_PARENTHESIS) {
