@@ -56,6 +56,7 @@ public final class TinyBasicInterpreter {
         this.array.clear();
         this.gosubStack.clear();
         Arrays.fill(this.loopFrames, null);
+        this.currentTerminalColumn = 0;
     }
 
     public void evaluate(LineNode lineNode) throws TinyBasicInterpreterException {
