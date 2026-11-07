@@ -59,9 +59,13 @@ public final class TinyBasicInterpreter {
         this.currentTerminalColumn = 0;
     }
 
-    public void evaluate(LineNode lineNode) throws TinyBasicInterpreterException {
+    public Collection<String> list() {
+        return this.lines.getLines().stream().map(TinyBasicLineList.NumberedLineNode::rawLine).toList();
+    }
+
+    public void evaluate(String rawLine, LineNode lineNode) throws TinyBasicInterpreterException {
         try {
-            this.lines.putLine(lineNode);
+            this.lines.putLine(rawLine, lineNode);
             if (lineNode.getLineNumber().isEmpty()) {
                 // Immediate mode statement
                 this.setLineIndex(-1);

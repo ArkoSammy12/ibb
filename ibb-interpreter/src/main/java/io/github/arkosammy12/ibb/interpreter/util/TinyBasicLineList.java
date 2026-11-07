@@ -4,6 +4,7 @@ import io.github.arkosammy12.ibb.core.parser.LineNode;
 import io.github.arkosammy12.ibb.core.parser.StatementNode;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.OptionalInt;
 
@@ -12,7 +13,7 @@ public final class TinyBasicLineList {
     private LineNode immediateModeLine = null;
     private final List<NumberedLineNode> lines = new ArrayList<>();
 
-    public void putLine(LineNode lineNode) {
+    public void putLine(String rawLine, LineNode lineNode) {
         OptionalInt lineNumberOptional = lineNode.getLineNumber();
         if (lineNumberOptional.isEmpty()) {
             this.immediateModeLine = lineNode;
@@ -23,7 +24,7 @@ public final class TinyBasicLineList {
             throw new IllegalArgumentException("The provided line number '%d' cannot be negative!".formatted(lineNumber));
         }
         if (this.lines.isEmpty()) {
-            this.lines.add(new NumberedLineNode(lineNumber, lineNode));
+            this.lines.add(new NumberedLineNode(rawLine, lineNumber, lineNode));
         } else {
             int insertPosition = 0;
             for (int i = lines.size() - 1; i >= 0; i--) {
@@ -34,11 +35,15 @@ public final class TinyBasicLineList {
             }
             int existingLineIndex = Math.max(0, insertPosition - 1);
             if (lineNumber == this.lines.get(existingLineIndex).lineNumber()) {
-                this.lines.set(existingLineIndex, new NumberedLineNode(lineNumber, lineNode));
+                this.lines.set(existingLineIndex, new NumberedLineNode(rawLine, lineNumber, lineNode));
             } else {
-                this.lines.add(insertPosition, new NumberedLineNode(lineNumber, lineNode));
+                this.lines.add(insertPosition, new NumberedLineNode(rawLine, lineNumber, lineNode));
             }
         }
+    }
+
+    public Collection<NumberedLineNode> getLines() {
+        return this.lines;
     }
 
     public void removeLine(int lineNumber) {
@@ -95,6 +100,6 @@ public final class TinyBasicLineList {
         return -1;
     }
 
-    record NumberedLineNode(int lineNumber, LineNode lineNode) {}
+    public record NumberedLineNode(String rawLine, int lineNumber, LineNode lineNode) {}
 
 }
