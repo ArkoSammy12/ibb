@@ -14,7 +14,7 @@ public final class TinyBasicCore {
     }
 
     @SuppressWarnings("unchecked")
-    public static ParseResult<TinyBasicParseValue, TinyBasicLexError> parseTinyBasic(String line) {
+    public static ParseResult<? extends TinyBasicParseValue, ? extends TinyBasicLexError> parseTinyBasic(String line) {
         return (ParseResult<TinyBasicParseValue, TinyBasicLexError>) switch (new TinyBasicLexer().lex(line)) {
             case ParseResult.Error<?, ?> error -> error;
             case ParseResult.Ok<TinyBasicLexValue, TinyBasicLexError> ok -> new TinyBasicParser().parse(ok.value().tokenStream());
