@@ -21,7 +21,7 @@ import static java.lang.IO.readln;
 
 public final class Ibb implements TinyBasicInterpreterHost {
 
-    private static final String PROMPT = MavenProperties.ARTIFACT_ID + ">";
+    private static final String PROMPT = MavenProperties.ARTIFACT_ID + "> ";
 
     private final TinyBasicInterpreter interpreter = new TinyBasicInterpreter(this, 14);
     private final TinyBasicLexer lexer = new TinyBasicLexer();
@@ -160,7 +160,7 @@ public final class Ibb implements TinyBasicInterpreterHost {
         Integer input = null;
         do {
             try {
-                input = Integer.parseInt(IO.readln(">"));
+                input = Integer.parseInt(IO.readln("> "));
             } catch (NumberFormatException e) {
                 IO.println("Please enter a valid number!");
             }
