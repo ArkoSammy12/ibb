@@ -15,6 +15,7 @@ import io.github.arkosammy12.ibb.interpreter.exception.*;
 
 import java.util.Optional;
 import java.util.OptionalInt;
+import sun.misc.Signal;
 
 import static java.lang.IO.println;
 import static java.lang.IO.readln;
@@ -27,7 +28,20 @@ public final class Ibb implements TinyBasicInterpreterHost {
     private final TinyBasicLexer lexer = new TinyBasicLexer();
     private final TinyBasicParser parser = new TinyBasicParser();
 
-    private boolean running;
+    private volatile boolean running = false;
+    private volatile boolean interpreterRunning = false;
+    private volatile boolean exitInterpreter = false;
+
+    public Ibb() {
+        Signal.handle(new Signal("INT"), sig -> {
+            if (this.interpreterRunning) {
+                this.exitInterpreter = true;
+            } else {
+                this.running = false;
+                System.exit(0);
+            }        
+        });
+    }
 
     public void start() {
 
@@ -42,10 +56,16 @@ public final class Ibb implements TinyBasicInterpreterHost {
                 run: Run the currently stored.
                 list: Print all lines of the currently stored Tiny BASIC program.
                 exit: Quit the Tiny BASIC interpreter and exit.\s
+
+                Press Ctrl+C to break the currently running Tiny BASIC program.
                \s""".formatted(MavenProperties.ARTIFACT_ID, MavenProperties.VERSION));
 
         while (this.running) {
             String input = readln(PROMPT);
+            if (input == null) {
+                IO.println();
+                continue;
+            }
             String strippedInput = input.strip();
             try {
                 switch (strippedInput) {
@@ -88,8 +108,9 @@ public final class Ibb implements TinyBasicInterpreterHost {
     }
 
     private void handleRun() throws TinyBasicInterpreterException {
-        // TODO: Add poll callback to let the interpreter return
+        this.interpreterRunning = true;
         this.interpreter.run();
+        this.interpreterRunning = false;
         IO.println();
     }
 
@@ -108,7 +129,9 @@ public final class Ibb implements TinyBasicInterpreterHost {
                         if (lineNode.getLineNumber().isPresent()) {
                             IO.println(input);
                         }
+                        this.interpreterRunning = true;
                         this.interpreter.evaluate(input, lineNode);
+                        this.interpreterRunning = false;
                     }
                 }
             }
@@ -166,6 +189,16 @@ public final class Ibb implements TinyBasicInterpreterHost {
             }
         } while (input == null);
         return (short) ((int) input);
+    }
+
+    @Override
+    public boolean shouldExit() {
+        if (this.exitInterpreter) {
+            this.exitInterpreter = false;
+            return true;
+        } else {
+            return false;
+        }
     }
 
     private static boolean allDigits(String s) {

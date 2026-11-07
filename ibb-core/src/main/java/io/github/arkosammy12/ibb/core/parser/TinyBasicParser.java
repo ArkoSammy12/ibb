@@ -307,7 +307,7 @@ public final class TinyBasicParser {
                 }
                 case MINUS -> {
                     context.poll();
-                    numericUnaryOperator = NumericExpressionNode.UnaryOperator.MINUS;
+                    numericUnaryOperator = NumericExpressionNode .UnaryOperator.MINUS;
                 }
             }
         }

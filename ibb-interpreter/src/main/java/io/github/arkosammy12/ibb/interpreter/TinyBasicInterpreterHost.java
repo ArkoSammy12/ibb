@@ -6,4 +6,6 @@ public interface TinyBasicInterpreterHost {
 
     short input();
 
+    boolean shouldExit();
+
 }

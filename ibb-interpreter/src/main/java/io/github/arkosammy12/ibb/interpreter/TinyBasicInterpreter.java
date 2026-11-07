@@ -89,7 +89,7 @@ public final class TinyBasicInterpreter {
         this.clear();
         this.setStatementIndex(0);
         this.running = true;
-        while (this.running) {
+        while (this.running && !this.host.shouldExit()) {
             switch (this.lines.getStatement(this.getLineIndex(), this.getStatementIndex())) {
                 case StatementResult.Ok(int lineNumber, StatementNode statementNode) -> {
                     int currentStatementIndex = this.getStatementIndex();
