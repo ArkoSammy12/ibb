@@ -12,23 +12,20 @@ import io.github.arkosammy12.ibb.core.util.SourcePosition;
 import io.github.arkosammy12.ibb.interpreter.TinyBasicInterpreter;
 import io.github.arkosammy12.ibb.interpreter.TinyBasicInterpreterHost;
 import io.github.arkosammy12.ibb.interpreter.exception.*;
-import sun.misc.Signal;
 
 import java.util.Optional;
 import java.util.OptionalInt;
-import java.util.Scanner;
 
 import static java.lang.IO.println;
 import static java.lang.IO.readln;
 
-public final class Ibb implements TinyBasicInterpreterHost, AutoCloseable {
+public final class Ibb implements TinyBasicInterpreterHost {
 
     private static final String PROMPT = MavenProperties.ARTIFACT_ID + ">";
 
     private final TinyBasicInterpreter interpreter = new TinyBasicInterpreter(this, 14);
     private final TinyBasicLexer lexer = new TinyBasicLexer();
     private final TinyBasicParser parser = new TinyBasicParser();
-    private final Scanner scanner = new Scanner(System.in);
 
     private boolean running;
 
@@ -169,11 +166,6 @@ public final class Ibb implements TinyBasicInterpreterHost, AutoCloseable {
             }
         } while (input == null);
         return (short) ((int) input);
-    }
-
-    @Override
-    public void close() {
-        this.scanner.close();
     }
 
     private static boolean allDigits(String s) {
