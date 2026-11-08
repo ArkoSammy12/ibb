@@ -254,6 +254,9 @@ public final class Ibb implements TinyBasicInterpreterHost {
         Integer input = null;
         do {
             String s = IO.readln("> ");
+            if (s == null) {
+                return 0;
+            }
             try {
                 input = Integer.parseInt(s);
             } catch (NumberFormatException e) {
