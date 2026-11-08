@@ -20,8 +20,6 @@ import java.util.OptionalInt;
 import sun.misc.Signal;
 
 import static io.github.arkosammy12.ibb.core.TinyBasicCore.parseTinyBasic;
-import static java.lang.IO.println;
-import static java.lang.IO.readln;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -52,13 +50,10 @@ public final class Ibb implements TinyBasicInterpreterHost {
     }
 
     public void start() {
-
         this.running = true;
-
         printHelpMessage();
-
         while (this.running) {
-            String input = readln(PROMPT);
+            String input = IO.readln(PROMPT);
             if (input == null) {
                 IO.println();
                 continue;
@@ -103,6 +98,10 @@ public final class Ibb implements TinyBasicInterpreterHost {
         this.interpreter.list().forEach(IO::println);
     }
 
+    private void handleRemoveLine(int lineNumber) {
+        this.interpreter.removeLine(lineNumber);
+    }
+
     private void handleHelp() {
         printHelpMessage();
     }
@@ -119,15 +118,14 @@ public final class Ibb implements TinyBasicInterpreterHost {
             IO.println("The provided 'save' path is invalid!");
             return;
         }
-
         if (optionalPath.isEmpty()) {
             IO.println("Must provide a path after the 'save' command!");
             return;
         }
         Path path = optionalPath.get();
-        Collection<String> lines = this.interpreter.list();
+
         try {
-            Files.write(path, lines);
+            Files.write(path, this.interpreter.list());
         } catch (IOException e) {
             IO.println("Failed to 'save' to file '%s': %s".formatted(path.toString(), e.getCause()));
         }
@@ -141,12 +139,12 @@ public final class Ibb implements TinyBasicInterpreterHost {
             IO.println("The provided 'load' path is invalid!");
             return;
         }
-
         if (optionalPath.isEmpty()) {
             IO.println("Must provide a path after the 'load' command!");
             return;
         }
         Path path = optionalPath.get();
+
         if (!Files.exists(path)) {
             IO.println("The provided 'load' argument path '%s' does not exist!".formatted(path.toString()));
             return;
@@ -183,7 +181,7 @@ public final class Ibb implements TinyBasicInterpreterHost {
             IO.println("Failed to load from file '%s': %s".formatted(path.toString(), e.getCause()));
         } catch (TinyBasicInterpreterException e) {
             // Should be unreachable since we only pass LineNodes with line numbers to the evaluate() method
-            IO.println("Failed to load from file '%s'!");
+            IO.println("Failed to load from file '%s'!".formatted(path.toString()));
             this.handleInterpreterException(e);
         }
     }
@@ -193,10 +191,6 @@ public final class Ibb implements TinyBasicInterpreterHost {
         this.interpreter.run();
         this.interpreterRunning = false;
         IO.println();
-    }
-
-    private void handleRemoveLine(int lineNumber) {
-        this.interpreter.removeLine(lineNumber);
     }
 
     private void handleEvaluate(String input) throws TinyBasicInterpreterException {
@@ -218,11 +212,11 @@ public final class Ibb implements TinyBasicInterpreterHost {
         Optional<SourcePosition> sourcePosition = parseError.getSourcePosition();
         String message = parseError.getMessage();
         if (sourcePosition.isEmpty()) {
-            IO.println("?Syntax error: %s".formatted(message));
+            IO.println("Syntax error: %s".formatted(message));
         } else if (row >= 0) {
-            IO.println("?Syntax error in row '%d', column '%d': %s".formatted(row + 1, sourcePosition.get().column() + 1, message));
+            IO.println("Syntax error in row '%d', column '%d': %s".formatted(row + 1, sourcePosition.get().column() + 1, message));
         } else {
-            IO.println("?Syntax error in column '%d': %s".formatted(sourcePosition.get().column() + 1, message));
+            IO.println("Syntax error in column '%d': %s".formatted(sourcePosition.get().column() + 1, message));
         }
     }
 
@@ -244,9 +238,9 @@ public final class Ibb implements TinyBasicInterpreterHost {
         };
         OptionalInt lineNumber = e.getLineNumber();
         if (lineNumber.isEmpty()) {
-            IO.println("Error on immediate mode line on statement %d: %s".formatted(e.getStatementIndex(), message));
+            IO.println("Error on immediate mode line on statement '%d': %s".formatted(e.getStatementIndex(), message));
         } else {
-            IO.println("Error on line %d, statement %d: %s".formatted(lineNumber.getAsInt(), e.getStatementIndex(), message));
+            IO.println("Error on line '%d', statement '%d': %s".formatted(lineNumber.getAsInt(), e.getStatementIndex(), message));
         }
     }
 
@@ -317,7 +311,7 @@ public final class Ibb implements TinyBasicInterpreterHost {
     }
 
     private static void printHelpMessage() {
-        println("""
+        IO.println("""
                +---------------------------------------------- %s v%s (Itsy Bitsy BASIC) ------------------------------------------------+
                | Commands:                                                                                                               |
                | - clear: Reset the state of the interpreter.                                                                            |
