@@ -27,6 +27,8 @@ public sealed interface StatementNode {
 
     record End() implements StatementNode {}
 
+    record EmptyPrint() implements StatementNode {}
+
     record Print(Element firstPrintElement, Collection<Element> extraPrintElements) implements StatementNode {
 
         public Print {

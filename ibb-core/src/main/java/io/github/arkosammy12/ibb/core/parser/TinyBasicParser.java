@@ -58,7 +58,13 @@ public final class TinyBasicParser {
             case VariableToken variableToken -> this.parseVariableAssignment(context, new AssignmentTargetNode.VariableTarget(variableToken.getVariable()));
             case ArraySigilToken _ -> this.parseVariableAssignment(context, new AssignmentTargetNode.ArrayElementTarget(this.parseParenthesizedNumericExpression(context, "array reference expression")));
             case KeywordToken keywordToken -> switch (keywordToken.getKeyword()) {
-                case PRINT -> new StatementNode.Print(this.parsePrintElement(context), this.parsePrintElements(context));
+                case PRINT -> {
+                    if (context.peek() instanceof EndOfLineToken) {
+                        yield new StatementNode.EmptyPrint();
+                    } else {
+                        yield new StatementNode.Print(this.parsePrintElement(context), this.parsePrintElements(context));
+                    }
+                }
                 case GOTO -> new StatementNode.Goto(this.parseAndExpectNumericExpression(context));
                 case LET -> this.parseVariableAssignment(context, this.parseAssignmentTarget(context));
                 case GOSUB -> new StatementNode.GoSub(this.parseAndExpectNumericExpression(context));

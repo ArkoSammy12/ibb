@@ -184,6 +184,10 @@ public final class TinyBasicInterpreter {
                     }
                 }
             }
+            case StatementNode.EmptyPrint _ -> {
+                this.host.print("\n");
+                this.currentTerminalColumn = 0;
+            }
             case StatementNode.Print(StatementNode.Print.Element firstPrintElement, Collection<StatementNode.Print.Element> extraPrintElements) -> {
                 StringBuilder sb = new StringBuilder();
                 this.printElement(lineNumber, currentStatementIndex, firstPrintElement, sb);

@@ -1,9 +1,7 @@
 package io.github.arkosammy12.ibb.cli;
 
-import io.github.arkosammy12.ibb.core.lexer.TinyBasicLexValue;
 import io.github.arkosammy12.ibb.core.lexer.TinyBasicLexer;
 import io.github.arkosammy12.ibb.core.parser.LineNode;
-import io.github.arkosammy12.ibb.core.parser.TinyBasicParseError;
 import io.github.arkosammy12.ibb.core.parser.TinyBasicParseValue;
 import io.github.arkosammy12.ibb.core.parser.TinyBasicParser;
 import io.github.arkosammy12.ibb.core.result.ParseError;
@@ -13,12 +11,21 @@ import io.github.arkosammy12.ibb.interpreter.TinyBasicInterpreter;
 import io.github.arkosammy12.ibb.interpreter.TinyBasicInterpreterHost;
 import io.github.arkosammy12.ibb.interpreter.exception.*;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
 import sun.misc.Signal;
 
+import static io.github.arkosammy12.ibb.core.TinyBasicCore.parseTinyBasic;
 import static java.lang.IO.println;
 import static java.lang.IO.readln;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 public final class Ibb implements TinyBasicInterpreterHost {
 
@@ -33,7 +40,7 @@ public final class Ibb implements TinyBasicInterpreterHost {
     private volatile boolean exitInterpreter = false;
 
     public Ibb() {
-        Signal.handle(new Signal("INT"), sig -> {
+        Signal.handle(new Signal("INT"), _ -> {
             if (this.interpreterRunning) {
                 this.exitInterpreter = true;
             } else {
@@ -55,6 +62,8 @@ public final class Ibb implements TinyBasicInterpreterHost {
                 new: Reset the state of the interpreter and remove the currently stored Tiny BASIC program.
                 run: Run the currently stored.
                 list: Print all lines of the currently stored Tiny BASIC program.
+                save <path>: Save the currently stored Tiny BASIC program to the provided file path.
+                load <path>: Replace the currently stored Tiny BASIC program with the one read from the provided path.
                 exit: Quit the Tiny BASIC interpreter and exit.\s
 
                 Press Ctrl+C to break the currently running Tiny BASIC program.
@@ -74,11 +83,13 @@ public final class Ibb implements TinyBasicInterpreterHost {
                     case "list" -> this.handleList();
                     case "run" -> this.handleRun();
                     case "exit" -> this.handleExit();
-                    //TODO: case "save" -> IO.println("'save' not yet implemented!");
-                    //TODO: case "load" -> IO.println("'load' not yet implemented!");
                     default -> {
                         if (allDigits(strippedInput)) {
                             this.handleRemoveLine(Integer.parseInt(strippedInput));
+                        } else if (strippedInput.startsWith("save")) {
+                            this.handleSave(strippedInput);
+                        } else if (strippedInput.startsWith("load")) {
+                            this.handleLoad(strippedInput);
                         } else {
                             this.handleEvaluate(input);
                         }
@@ -107,6 +118,69 @@ public final class Ibb implements TinyBasicInterpreterHost {
         this.running = false;
     }
 
+    private void handleSave(String strippedInput) {
+        Optional<Path> optionalPath = getPathArgument(strippedInput);
+        if (optionalPath.isEmpty()) {
+            IO.println("Must provide a path after the 'save' command!");
+            return;
+        }
+        Path path = optionalPath.get();
+        Collection<String> lines = this.interpreter.list();
+        try {
+            Files.write(path, lines);
+        } catch (IOException e) {
+            IO.println("Failed to 'save' to file '%s': %s".formatted(path.toString(), e.getCause()));
+        }
+    }
+
+    private void handleLoad(String strippedInput) {
+        Optional<Path> optionalPath = getPathArgument(strippedInput);
+        if (optionalPath.isEmpty()) {
+            IO.println("Must provide a path after the 'load' command!");
+            return;
+        }
+        Path path = optionalPath.get();
+        if (!Files.exists(path)) {
+            IO.println("The provided 'load' argument path '%s' does not exist!".formatted(path.toString()));
+            return;
+        }
+        try {
+            List<String> lines = Files.readAllLines(path);
+            Collection<InsertedLine> readLines = new ArrayList<>();
+            if (lines.isEmpty()) {
+                IO.println("Cannot 'load' from file '%s' because the file is empty!".formatted(path.toString()));
+                return;
+            }
+            for (int i = 0; i < lines.size(); i++) {
+                String line = lines.get(i);
+                switch (parseTinyBasic(line, () -> this.lexer, () -> this.parser)) {
+                    case ParseResult.Error<?, ?> error -> {
+                        this.handleEvalParseError(error.error(), i);
+                        return;
+                    }
+                    case ParseResult.Ok<? extends TinyBasicParseValue, ?> ok -> {
+                        LineNode lineNode = ok.value().lineNode();
+                        if (lineNode.getLineNumber().isEmpty()) {
+                            IO.println("Cannot 'load' from file '%s' because the line in row '%s' does not have a line number!".formatted(path.toString(), i + 1));
+                            return;
+                        }
+                        readLines.add(new InsertedLine(line, lineNode));
+                    }
+                }
+            }
+            this.interpreter.newProgram();
+            for (InsertedLine insertedLine : readLines) {
+                this.interpreter.evaluate(insertedLine.rawLine(), insertedLine.lineNode());
+            }
+        } catch (IOException e) {
+            IO.println("Failed to load from file '%s': %s".formatted(path.toString(), e.getCause()));
+        } catch (TinyBasicInterpreterException e) {
+            // Should be unreachable since we only pass LineNodes with line numbers to the evaluate() method
+            IO.println("Failed to load from file '%s'!");
+            this.handleInterpreterException(e);
+        }
+    }
+
     private void handleRun() throws TinyBasicInterpreterException {
         this.interpreterRunning = true;
         this.interpreter.run();
@@ -119,33 +193,32 @@ public final class Ibb implements TinyBasicInterpreterHost {
     }
 
     private void handleEvaluate(String input) throws TinyBasicInterpreterException {
-        switch (this.lexer.lex(input)) {
-            case ParseResult.Error<?, ?> lexError -> this.handleEvalParseError(lexError.error());
-            case ParseResult.Ok<TinyBasicLexValue, ?> okLex -> {
-                switch (this.parser.parse(okLex.value().tokenStream())) {
-                    case ParseResult.Error<?, ?> parseError -> this.handleEvalParseError(parseError.error());
-                    case ParseResult.Ok<TinyBasicParseValue, TinyBasicParseError> okParse -> {
-                        LineNode lineNode = okParse.value().lineNode();
-                        if (lineNode.getLineNumber().isPresent()) {
-                            IO.println(input);
-                        }
-                        this.interpreterRunning = true;
-                        this.interpreter.evaluate(input, lineNode);
-                        this.interpreterRunning = false;
-                    }
+        switch (parseTinyBasic(input, () -> this.lexer, () -> this.parser)) {
+            case ParseResult.Error<?, ?> error -> this.handleEvalParseError(error.error(), -1);
+            case ParseResult.Ok<? extends TinyBasicParseValue, ?> ok -> {
+                LineNode lineNode = ok.value().lineNode();
+                if (lineNode.getLineNumber().isPresent()) {
+                    IO.println(input);
                 }
+                this.interpreterRunning = true;
+                this.interpreter.evaluate(input, lineNode);
+                this.interpreterRunning = false;
             }
-
         }
     }
 
-    private void handleEvalParseError(ParseError parseError) {
+    private void handleEvalParseError(ParseError parseError, int row) {
         Optional<SourcePosition> optionalSourcePosition = parseError.getSourcePosition();
         String message = parseError.getMessage();
         if (optionalSourcePosition.isEmpty()) {
             IO.println("?Syntax error: %s".formatted(message));
         } else {
-            IO.println("?Syntax error in column %d: %s".formatted(optionalSourcePosition.get().column(), message));
+            SourcePosition sourcePosition = optionalSourcePosition.get();
+            if (row >= 0) {
+                IO.println("?Syntax error in row %d, column %d: %s".formatted(row + 1, sourcePosition.column() + 1, message));
+            } else {
+                IO.println("?Syntax error in column %d: %s".formatted(sourcePosition.column() + 1, message));
+            }
         }
     }
 
@@ -212,5 +285,25 @@ public final class Ibb implements TinyBasicInterpreterHost {
         }
         return true;
     }
+
+    private static Optional<Path> getPathArgument(String strippedInput) {
+        int firstWhitespaceIndex = strippedInput.indexOf(' ');
+        if (firstWhitespaceIndex < 0 || firstWhitespaceIndex >= strippedInput.length() - 1) {
+            return Optional.empty();
+        }
+        String arg = strippedInput.substring(firstWhitespaceIndex + 1);
+        if (!arg.isEmpty() && arg.charAt(0) == '"') {
+            arg = arg.substring(1);
+        }
+        if (!arg.isEmpty() && arg.charAt(arg.length() - 1) == '"') {
+            arg = arg.substring(0, arg.length() - 1);
+        }
+        if (arg.isBlank()) {
+            return Optional.empty();
+        }
+        return Optional.of(Paths.get(arg));
+    }
+
+    private record InsertedLine(String rawLine, LineNode lineNode) {}
 
 }
