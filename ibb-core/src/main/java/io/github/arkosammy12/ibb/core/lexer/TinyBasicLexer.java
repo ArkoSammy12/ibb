@@ -17,14 +17,10 @@ public final class TinyBasicLexer {
         return this.lex(SourceStream.fromLine(line));
     }
 
-    public ParseResult<TinyBasicLexValue, TinyBasicLexError> lex(Collection<String> lines) {
-        return this.lex(SourceStream.fromLines(lines));
-    }
-
     public ParseResult<TinyBasicLexValue, TinyBasicLexError> lex(SourceStream<SourceCharacter> sourceCharacterSourceStream) {
         try {
             TinyBasicLexerContext context = new TinyBasicLexerContext(sourceCharacterSourceStream);
-            while (context.hasCharacters()) {
+             while (context.hasCharacters()) {
                 SourceCharacter sourceCharacter = context.poll();
                 if (this.lexToken(context, sourceCharacter, Keyword.class, KeywordToken::new)) {
                     continue;

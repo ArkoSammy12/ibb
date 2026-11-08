@@ -19,12 +19,12 @@ final class TinyBasicLexerContext {
 
     SourceCharacter poll() {
         SourceCharacter sourceCharacter = this.sourceCharacterStream.pollOrDefault();
-        return sourceCharacter == null ? new SourceCharacter(null, new SourcePosition(0, 0)) : sourceCharacter;
+        return sourceCharacter == null ? new SourceCharacter(null, new SourcePosition(0)) : sourceCharacter;
     }
 
     SourceCharacter peek() {
         SourceCharacter sourceCharacter = this.sourceCharacterStream.peekOrDefault();
-        return sourceCharacter == null ? new SourceCharacter(null, new SourcePosition(0, 0)) : sourceCharacter;
+        return sourceCharacter == null ? new SourceCharacter(null, new SourcePosition(0)) : sourceCharacter;
     }
 
     void push(SourceCharacter sourceCharacter) {
@@ -46,7 +46,7 @@ final class TinyBasicLexerContext {
     }
 
     SourceStream<Token> getTokenStream() {
-        SourcePosition lastPosition = this.tokens.stream().reduce((_, second) -> second).map(Token::getSourcePosition).orElseGet(() -> new SourcePosition(0, 0));
+        SourcePosition lastPosition = this.tokens.stream().reduce((_, second) -> second).map(Token::getSourcePosition).orElseGet(() -> new SourcePosition(0));
         return new SourceStream<>(this.tokens, new EndOfLineToken(lastPosition));
     }
 

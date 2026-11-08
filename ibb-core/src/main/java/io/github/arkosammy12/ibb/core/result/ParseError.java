@@ -14,12 +14,4 @@ public interface ParseError {
         return "ParseError[sourcePosition=%s, message=%s]".formatted(parseError.getSourcePosition().map(SourcePosition::toString).orElse(""), parseError.getMessage());
     }
 
-    static String getMessage(ParseError parseError) {
-        return "%s%s".formatted(parseError.getSourcePosition()
-                .map(sourcePosition -> "(%d:%d) ".formatted(sourcePosition.row() + 1, sourcePosition.column() + 1))
-                .orElse(""),
-                parseError.getMessage()
-        );
-    }
-
 }

@@ -44,22 +44,4 @@ public final class SourceStream<T> {
         return new SourceStream<>(sourceCharacters, new SourceCharacter(null, new SourcePosition(line.length())));
     }
 
-    public static SourceStream<SourceCharacter> fromLines(Collection<String> lines) {
-        Collection<SourceCharacter> sourceCharacters = new ArrayList<>();
-        SourcePosition lastValidSourcePosition = new SourcePosition(0, 0);
-        int row = 0;
-        for (String line : lines) {
-            for (int column = 0; column < line.length(); column++) {
-                SourcePosition sourcePosition = new SourcePosition(row, column);
-                sourceCharacters.add(new SourceCharacter(line.charAt(column), sourcePosition));
-                lastValidSourcePosition = sourcePosition;
-            }
-            if (row == Integer.MAX_VALUE) {
-                throw new IllegalArgumentException("Tried to index too many lines into source character stream!");
-            }
-            row++;
-        }
-        return new SourceStream<>(sourceCharacters, new SourceCharacter(null, lastValidSourcePosition));
-    }
-
 }

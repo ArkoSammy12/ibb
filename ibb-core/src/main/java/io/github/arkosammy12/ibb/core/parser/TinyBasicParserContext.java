@@ -15,12 +15,12 @@ final class TinyBasicParserContext {
 
     Token poll() {
         Token token = this.tokenStream.pollOrDefault();
-        return token == null ? new EndOfLineToken(new SourcePosition(0, 0)) : token;
+        return token == null ? new EndOfLineToken(new SourcePosition(0)) : token;
     }
 
     Token peek() {
         Token token = this.tokenStream.peekOrDefault();
-        return token == null ? new EndOfLineToken(new SourcePosition(0, 0)) : token;
+        return token == null ? new EndOfLineToken(new SourcePosition(0)) : token;
     }
 
     boolean hasTokens() {

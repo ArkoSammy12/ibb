@@ -215,9 +215,9 @@ public final class Ibb implements TinyBasicInterpreterHost {
         } else {
             SourcePosition sourcePosition = optionalSourcePosition.get();
             if (row >= 0) {
-                IO.println("?Syntax error in row %d, column %d: %s".formatted(row + 1, sourcePosition.column() + 1, message));
+                IO.println("?Syntax error in row '%d', column '%d': %s".formatted(row + 1, sourcePosition.column() + 1, message));
             } else {
-                IO.println("?Syntax error in column %d: %s".formatted(sourcePosition.column() + 1, message));
+                IO.println("?Syntax error in column '%d': %s".formatted(sourcePosition.column() + 1, message));
             }
         }
     }
