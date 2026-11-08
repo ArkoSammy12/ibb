@@ -31,7 +31,7 @@ public final class Ibb implements TinyBasicInterpreterHost {
 
     private static final String PROMPT = MavenProperties.ARTIFACT_ID + "> ";
 
-    private final TinyBasicInterpreter interpreter = new TinyBasicInterpreter(this, 14);
+    private final TinyBasicInterpreter interpreter = new TinyBasicInterpreter(this, 11);
     private final TinyBasicLexer lexer = new TinyBasicLexer();
     private final TinyBasicParser parser = new TinyBasicParser();
 
