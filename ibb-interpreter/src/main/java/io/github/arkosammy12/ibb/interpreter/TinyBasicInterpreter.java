@@ -156,8 +156,8 @@ public final class TinyBasicInterpreter {
                     this.setStatementIndex(returnIndex.statementIndex());
                 }
             }
-            case StatementNode.If(BooleanExpressionNode conditionalExpression, StatementNode statement) -> {
-                if (this.evaluateBooleanExpression(lineNumber, currentStatementIndex, conditionalExpression)) {
+            case StatementNode.If(ExpressionNode conditionalExpression, StatementNode statement) -> {
+                if (this.evaluateExpressionToBooleanValue(lineNumber, currentStatementIndex, conditionalExpression)) {
                     this.executeStatement(lineNumber, currentStatementIndex, statement);
                 } else {
                     this.skipToNextLine();
@@ -250,6 +250,13 @@ public final class TinyBasicInterpreter {
             throw new IllegalArgumentException("Cannot increment terminal column index by a negative amount!");
         }
         this.currentTerminalColumn = Math.addExact(this.currentTerminalColumn, incrementAmount);
+    }
+
+    private boolean evaluateExpressionToBooleanValue(int lineNumber, int currentStatementIndex, ExpressionNode expressionNode) throws TinyBasicInterpreterException {
+        return switch (expressionNode) {
+            case BooleanExpressionNode booleanExpressionNode -> this.evaluateBooleanExpression(lineNumber, currentStatementIndex, booleanExpressionNode);
+            case NumericExpressionNode numericExpressionNode -> this.evaluateNumericExpression(lineNumber, currentStatementIndex, numericExpressionNode) != 0;
+        };
     }
 
     private short evaluateExpressionToNumericValue(int lineNumber, int currentStatementIndex, ExpressionNode expressionNode) throws TinyBasicInterpreterException {

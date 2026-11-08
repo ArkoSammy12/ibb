@@ -17,7 +17,7 @@ public sealed interface StatementNode {
 
     record Return() implements StatementNode {}
 
-    record If(BooleanExpressionNode conditionalExpression, StatementNode statement) implements StatementNode {}
+    record If(ExpressionNode conditionalExpression, StatementNode statement) implements StatementNode {}
 
     record For(Variable loopVariable, ExpressionNode startValueExpression, ExpressionNode endValueExpression) implements StatementNode {}
 
