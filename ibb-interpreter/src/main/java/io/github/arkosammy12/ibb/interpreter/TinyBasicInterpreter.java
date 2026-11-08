@@ -302,8 +302,8 @@ public final class TinyBasicInterpreter {
                 yield val > 0 ? 1 : (val < 0 ? -1 : 0);
             }
             case NumericExpressionNode.BinaryOperationExpressionNode binaryOperationExpressionNode -> {
-                short lhs = this.evaluateNumericExpression(lineNumber, currentStatementIndex, binaryOperationExpressionNode.lhs());
-                short rhs = this.evaluateNumericExpression(lineNumber, currentStatementIndex, binaryOperationExpressionNode.rhs());
+                short lhs = this.evaluateExpressionToNumericValue(lineNumber, currentStatementIndex, binaryOperationExpressionNode.lhs());
+                short rhs = this.evaluateExpressionToNumericValue(lineNumber, currentStatementIndex, binaryOperationExpressionNode.rhs());
                 yield (short) switch (binaryOperationExpressionNode.operator()) {
                     case ADD -> lhs + rhs;
                     case SUBTRACT -> lhs - rhs;

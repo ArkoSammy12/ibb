@@ -275,6 +275,9 @@ public final class Ibb implements TinyBasicInterpreterHost {
     }
 
     private static boolean allDigits(String s) {
+        if (s.isBlank()) {
+            return false;
+        }
         for (int i = 0; i < s.length(); i++) {
             switch (s.charAt(i)) {
                 case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> {}

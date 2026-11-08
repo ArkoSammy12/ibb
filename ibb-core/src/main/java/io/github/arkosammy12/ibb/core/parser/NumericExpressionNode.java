@@ -78,7 +78,7 @@ public sealed interface NumericExpressionNode extends ExpressionNode {
 
     }
 
-    record BinaryOperationExpressionNode(UnaryOperator unaryOperator, Operator operator, NumericExpressionNode lhs, NumericExpressionNode rhs) implements NumericExpressionNode {
+    record BinaryOperationExpressionNode(UnaryOperator unaryOperator, Operator operator, ExpressionNode lhs, ExpressionNode rhs) implements NumericExpressionNode {
 
         @Override
         public UnaryOperator getUnaryOperator() {

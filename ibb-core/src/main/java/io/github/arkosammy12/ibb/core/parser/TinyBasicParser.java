@@ -337,17 +337,8 @@ public final class TinyBasicParser {
         if (operator == null) {
             return lhs;
         }
-        return switch (lhs) {
-            case NumericExpressionNode lhsNumericExpressionNode -> {
-                context.poll();
-                NumericExpressionNode rhs = switch (this.parseNumericTerm(context, NumericExpressionNode.UnaryOperator.NONE)) {
-                    case NumericExpressionNode numericExpressionNode -> numericExpressionNode;
-                    case BooleanExpressionNode _ -> throw new TinyBasicParseException("Cannot apply operator '%s' to boolean expression!".formatted(nextToken.getLexeme()), nextToken.getSourcePosition());
-                };
-                yield this.parseNumericExpressionRest(context, new NumericExpressionNode.BinaryOperationExpressionNode(NumericExpressionNode.UnaryOperator.NONE, operator, lhsNumericExpressionNode, rhs));
-            }
-            case BooleanExpressionNode _ -> throw new TinyBasicParseException("Cannot apply operator '%s' to boolean expression!".formatted(nextToken.getLexeme()), nextToken.getSourcePosition());
-        };
+        context.poll();
+        return this.parseNumericExpressionRest(context, new NumericExpressionNode.BinaryOperationExpressionNode(NumericExpressionNode.UnaryOperator.NONE, operator, lhs, this.parseNumericTerm(context, NumericExpressionNode.UnaryOperator.NONE)));
     }
 
     private ExpressionNode parseNumericTerm(TinyBasicParserContext context, NumericExpressionNode.UnaryOperator numericUnaryOperator) throws TinyBasicParseException {
@@ -368,17 +359,8 @@ public final class TinyBasicParser {
         if (operator == null) {
             return lhs;
         }
-        return switch (lhs) {
-            case NumericExpressionNode lhsNumericExpressionNode -> {
-                context.poll();
-                NumericExpressionNode rhsNumericExpressionNode = switch (this.parseNumericFactor(context, NumericExpressionNode.UnaryOperator.NONE)) {
-                    case NumericExpressionNode numericExpressionNode -> numericExpressionNode;
-                    case BooleanExpressionNode _ -> throw new TinyBasicParseException("Cannot apply operator '%s' to boolean expression!".formatted(nextToken.getLexeme()), nextToken.getSourcePosition());
-                };
-                yield this.parseNumericTermRest(context, new NumericExpressionNode.BinaryOperationExpressionNode(NumericExpressionNode.UnaryOperator.NONE, operator, lhsNumericExpressionNode, rhsNumericExpressionNode));
-            }
-            case BooleanExpressionNode _ -> throw new TinyBasicParseException("Cannot apply operator '%s' to boolean expression!".formatted(nextToken.getLexeme()), nextToken.getSourcePosition());
-        };
+        context.poll();
+        return this.parseNumericTermRest(context, new NumericExpressionNode.BinaryOperationExpressionNode(NumericExpressionNode.UnaryOperator.NONE, operator, lhs, this.parseNumericFactor(context, NumericExpressionNode.UnaryOperator.NONE)));
     }
 
     private ExpressionNode parseNumericFactor(TinyBasicParserContext context, NumericExpressionNode.UnaryOperator numericUnaryOperator) throws TinyBasicParseException {
