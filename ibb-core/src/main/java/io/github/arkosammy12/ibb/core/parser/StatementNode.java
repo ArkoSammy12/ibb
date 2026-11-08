@@ -9,17 +9,17 @@ import java.util.stream.Collectors;
 
 public sealed interface StatementNode {
 
-    record Assignment(AssignmentTargetNode assignmentTargetNode, NumericExpressionNode numericExpressionNode) implements StatementNode {}
+    record Assignment(AssignmentTargetNode assignmentTargetNode, ExpressionNode expressionNode) implements StatementNode {}
 
-    record Goto(NumericExpressionNode targetExpression) implements StatementNode {}
+    record Goto(ExpressionNode targetExpression) implements StatementNode {}
 
-    record GoSub(NumericExpressionNode targetExpression) implements StatementNode {}
+    record GoSub(ExpressionNode targetExpression) implements StatementNode {}
 
     record Return() implements StatementNode {}
 
     record If(BooleanExpressionNode conditionalExpression, StatementNode statement) implements StatementNode {}
 
-    record For(Variable loopVariable, NumericExpressionNode startValueExpression, NumericExpressionNode endValueExpression) implements StatementNode {}
+    record For(Variable loopVariable, ExpressionNode startValueExpression, ExpressionNode endValueExpression) implements StatementNode {}
 
     record Next(Variable loopVariable) implements StatementNode {}
 
@@ -35,7 +35,7 @@ public sealed interface StatementNode {
             extraPrintElements = List.copyOf(extraPrintElements);
         }
 
-        public record Element(NumericExpressionListNode numericExpressionListNode, FormattingDelimiter suffixDelimiter) {}
+        public record Element(ExpressionListNode expressionListNode, FormattingDelimiter suffixDelimiter) {}
 
         public enum FormattingDelimiter {
             COMMA,

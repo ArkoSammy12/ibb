@@ -56,7 +56,7 @@ public final class TinyBasicParser {
     private StatementNode parseStatement(TinyBasicParserContext context) throws TinyBasicParseException {
         return switch (context.poll()) {
             case VariableToken variableToken -> this.parseVariableAssignment(context, new AssignmentTargetNode.VariableTarget(variableToken.getVariable()));
-            case ArraySigilToken _ -> this.parseVariableAssignment(context, new AssignmentTargetNode.ArrayElementTarget(this.parseParenthesizedNumericExpression(context, "array reference expression")));
+            case ArraySigilToken _ -> this.parseVariableAssignment(context, new AssignmentTargetNode.ArrayElementTarget(this.parseParenthesizedExpression(context, "array reference expression")));
             case KeywordToken keywordToken -> switch (keywordToken.getKeyword()) {
                 case PRINT -> {
                     if (context.peek() instanceof EndOfLineToken) {
@@ -65,9 +65,9 @@ public final class TinyBasicParser {
                         yield new StatementNode.Print(this.parsePrintElement(context), this.parsePrintElements(context));
                     }
                 }
-                case GOTO -> new StatementNode.Goto(this.parseAndExpectNumericExpression(context));
+                case GOTO -> new StatementNode.Goto(this.parseExpression(context));
                 case LET -> this.parseVariableAssignment(context, this.parseAssignmentTarget(context));
-                case GOSUB -> new StatementNode.GoSub(this.parseAndExpectNumericExpression(context));
+                case GOSUB -> new StatementNode.GoSub(this.parseExpression(context));
                 case RETURN -> new StatementNode.Return();
                 case END -> new StatementNode.End();
                 case NEXT -> new StatementNode.Next(this.parseVariable(context));
@@ -93,9 +93,9 @@ public final class TinyBasicParser {
                 case FOR -> {
                     Variable loopVariable = this.parseVariable(context);
                     this.expect(context, assignmentToken -> assignmentToken instanceof OperatorToken operatorToken && operatorToken.getOperator() == Operator.EQUALS, "assignment operator '='");
-                    NumericExpressionNode startValueExpression = this.parseAndExpectNumericExpression(context);
+                    ExpressionNode startValueExpression = this.parseExpression(context);
                     this.expect(context, toToken -> toToken instanceof KeywordToken toKeywordToken && toKeywordToken.getKeyword() == Keyword.TO, "range separator 'to'");
-                    NumericExpressionNode endValueExpression = this.parseAndExpectNumericExpression(context);
+                    ExpressionNode endValueExpression = this.parseExpression(context);
                     yield new StatementNode.For(loopVariable, startValueExpression, endValueExpression);
                 }
                 default -> throw new TinyBasicParseException("Illegal start of statement '%s'!".formatted(keywordToken.getLexeme()), keywordToken.getSourcePosition());
@@ -107,8 +107,8 @@ public final class TinyBasicParser {
 
     private StatementNode.Assignment parseVariableAssignment(TinyBasicParserContext context, AssignmentTargetNode assignmentTargetNode) throws TinyBasicParseException {
         this.expect(context, middleToken -> middleToken instanceof OperatorToken operatorToken && operatorToken.getOperator() == Operator.EQUALS, "assignment operator '='");
-        NumericExpressionNode numericExpressionNode = this.parseAndExpectNumericExpression(context);
-        return new StatementNode.Assignment(assignmentTargetNode, numericExpressionNode);
+        ExpressionNode expressionNode = this.parseExpression(context);
+        return new StatementNode.Assignment(assignmentTargetNode, expressionNode);
     }
 
     private Collection<StatementNode.Print.Element> parsePrintElements(TinyBasicParserContext context) throws TinyBasicParseException {
@@ -130,12 +130,12 @@ public final class TinyBasicParser {
     }
 
     private StatementNode.Print.Element parsePrintElement(TinyBasicParserContext context) throws TinyBasicParseException {
-        NumericExpressionListNode numericExpressionListNode = switch (context.peek()) {
+        ExpressionListNode expressionListNode = switch (context.peek()) {
             case StringToken stringToken -> {
                 context.poll();
                 yield new StringNode(stringToken.getContents());
             }
-            default -> this.parseAndExpectNumericExpression(context);
+            default -> this.parseExpression(context);
         };
         StatementNode.Print.FormattingDelimiter formattingDelimiter = switch (context.peek()) {
             case DelimiterToken delimiterToken -> switch (delimiterToken.getDelimiter()) {
@@ -145,7 +145,7 @@ public final class TinyBasicParser {
             };
             default -> StatementNode.Print.FormattingDelimiter.NONE;
         };
-        return new StatementNode.Print.Element(numericExpressionListNode, formattingDelimiter);
+        return new StatementNode.Print.Element(expressionListNode, formattingDelimiter);
     }
 
     private Collection<AssignmentTargetNode> parseAssignmentTargetList(TinyBasicParserContext context) throws TinyBasicParseException {
@@ -160,7 +160,7 @@ public final class TinyBasicParser {
     private AssignmentTargetNode parseAssignmentTarget(TinyBasicParserContext context) throws TinyBasicParseException {
         return switch (context.poll()) {
             case VariableToken variableToken -> new AssignmentTargetNode.VariableTarget(variableToken.getVariable());
-            case ArraySigilToken _ -> new AssignmentTargetNode.ArrayElementTarget(this.parseParenthesizedNumericExpression(context, "array reference expression"));
+            case ArraySigilToken _ -> new AssignmentTargetNode.ArrayElementTarget(this.parseParenthesizedExpression(context, "array reference expression"));
             case Token token -> throw new TinyBasicParseException("Expected variable or array reference, found '%s'!".formatted(token.getLexeme()), token.getSourcePosition());
         };
     }
@@ -179,11 +179,11 @@ public final class TinyBasicParser {
         }
     }
 
-    private NumericExpressionNode parseParenthesizedNumericExpression(TinyBasicParserContext context, String expected) throws TinyBasicParseException {
+    private ExpressionNode parseParenthesizedExpression(TinyBasicParserContext context, String expected) throws TinyBasicParseException {
         this.expect(context, opening -> opening instanceof DelimiterToken openingDelimiter && openingDelimiter.getDelimiter() == Delimiter.LEFT_PARENTHESIS, "'(' to begin %s".formatted(expected));
-        NumericExpressionNode numericExpressionNode = this.parseAndExpectNumericExpression(context);
+        ExpressionNode expressionNode = this.parseExpression(context);
         this.expect(context, closing -> closing instanceof DelimiterToken closingDelimiter && closingDelimiter.getDelimiter() == Delimiter.RIGHT_PARENTHESIS, "')' to end %s".formatted(expected));
-        return numericExpressionNode;
+        return expressionNode;
     }
 
     private void consumeRemainingTokens(TinyBasicParserContext context) {
@@ -199,6 +199,7 @@ public final class TinyBasicParser {
             case BooleanExpressionNode _ -> throw new TinyBasicParseException("Expected numeric expression!", expressionStartPosition);
         };
     }
+
 
     private BooleanExpressionNode parseAndExpectBooleanExpression(TinyBasicParserContext context) throws TinyBasicParseException {
         SourcePosition expressionStartPosition = context.peek().getSourcePosition();
@@ -381,7 +382,7 @@ public final class TinyBasicParser {
         return switch (context.poll()) {
             case VariableToken variableToken -> new NumericExpressionNode.VariableNode(numericUnaryOperator, variableToken.getVariable());
             case NumberToken numberToken -> new NumericExpressionNode.NumberNode(numericUnaryOperator, (short) numberToken.getValue());
-            case ArraySigilToken _ -> new NumericExpressionNode.ArrayReferenceNode(numericUnaryOperator, this.parseParenthesizedNumericExpression(context, "array reference expression"));
+            case ArraySigilToken _ -> new NumericExpressionNode.ArrayReferenceNode(numericUnaryOperator, this.parseParenthesizedExpression(context, "array reference expression"));
             case DelimiterToken delimiterToken -> {
                 if (delimiterToken.getDelimiter() != Delimiter.LEFT_PARENTHESIS) {
                     throw new TinyBasicParseException("Expected '(' to begin expression, found '%s!".formatted(delimiterToken.getLexeme()), delimiterToken.getSourcePosition());
@@ -407,9 +408,9 @@ public final class TinyBasicParser {
                     this.expect(context, closing -> closing instanceof DelimiterToken closingDelimiter && closingDelimiter.getDelimiter() == Delimiter.RIGHT_PARENTHESIS, "')' to end ASC() expression argument");
                     yield new NumericExpressionNode.AscFunctionNode(numericUnaryOperator, arg);
                 }
-                case ABS -> new NumericExpressionNode.AbsFunctionNode(numericUnaryOperator, this.parseParenthesizedNumericExpression(context, "ABS() expression argument"));
-                case RND -> new NumericExpressionNode.RndFunctionNode(numericUnaryOperator, this.parseParenthesizedNumericExpression(context, "RND() expression argument"));
-                case SGN -> new NumericExpressionNode.SgnFunctionNode(numericUnaryOperator, this.parseParenthesizedNumericExpression(context, "SGN() expression argument"));
+                case ABS -> new NumericExpressionNode.AbsFunctionNode(numericUnaryOperator, this.parseParenthesizedExpression(context, "ABS() expression argument"));
+                case RND -> new NumericExpressionNode.RndFunctionNode(numericUnaryOperator, this.parseParenthesizedExpression(context, "RND() expression argument"));
+                case SGN -> new NumericExpressionNode.SgnFunctionNode(numericUnaryOperator, this.parseParenthesizedExpression(context, "SGN() expression argument"));
                 default -> throw new TinyBasicParseException("Expected variable, number, array reference, function or expression enclosing in parenthesis, found '%s'!".formatted(keywordToken.getLexeme()), keywordToken.getSourcePosition());
             };
             case Token token -> throw new TinyBasicParseException("Expected variable, number, array reference, function or expression enclosing in parenthesis, found '%s'!".formatted(token.getLexeme()), token.getSourcePosition());

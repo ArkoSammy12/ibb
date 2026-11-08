@@ -2,7 +2,7 @@ package io.github.arkosammy12.ibb.core.parser;
 
 import io.github.arkosammy12.ibb.core.grammar.Variable;
 
-public sealed interface NumericExpressionNode extends ExpressionNode, NumericExpressionListNode {
+public sealed interface NumericExpressionNode extends ExpressionNode {
 
     UnaryOperator getUnaryOperator();
 
@@ -24,7 +24,7 @@ public sealed interface NumericExpressionNode extends ExpressionNode, NumericExp
 
     }
 
-    record ArrayReferenceNode(UnaryOperator unaryOperator, NumericExpressionNode arrayIndexExpression) implements NumericExpressionNode {
+    record ArrayReferenceNode(UnaryOperator unaryOperator, ExpressionNode arrayIndexExpression) implements NumericExpressionNode {
 
         @Override
         public UnaryOperator getUnaryOperator() {
@@ -33,7 +33,7 @@ public sealed interface NumericExpressionNode extends ExpressionNode, NumericExp
 
     }
 
-    record AbsFunctionNode(UnaryOperator unaryOperator, NumericExpressionNode argumentExpression) implements NumericExpressionNode {
+    record AbsFunctionNode(UnaryOperator unaryOperator, ExpressionNode argumentExpression) implements NumericExpressionNode {
 
         @Override
         public UnaryOperator getUnaryOperator() {
@@ -51,7 +51,7 @@ public sealed interface NumericExpressionNode extends ExpressionNode, NumericExp
 
     }
 
-    record RndFunctionNode(UnaryOperator unaryOperator, NumericExpressionNode argumentExpression) implements NumericExpressionNode {
+    record RndFunctionNode(UnaryOperator unaryOperator, ExpressionNode argumentExpression) implements NumericExpressionNode {
 
         @Override
         public UnaryOperator getUnaryOperator() {
@@ -60,7 +60,7 @@ public sealed interface NumericExpressionNode extends ExpressionNode, NumericExp
 
     }
 
-    record SgnFunctionNode(UnaryOperator unaryOperator, NumericExpressionNode argumentExpression) implements NumericExpressionNode {
+    record SgnFunctionNode(UnaryOperator unaryOperator, ExpressionNode argumentExpression) implements NumericExpressionNode {
 
         @Override
         public UnaryOperator getUnaryOperator() {

@@ -6,6 +6,6 @@ public sealed interface AssignmentTargetNode {
 
     record VariableTarget(Variable variable) implements AssignmentTargetNode {}
 
-    record ArrayElementTarget(NumericExpressionNode arrayIndexExpression) implements AssignmentTargetNode {}
+    record ArrayElementTarget(ExpressionNode arrayIndexExpression) implements AssignmentTargetNode {}
 
 }

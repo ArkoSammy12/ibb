@@ -118,12 +118,12 @@ public final class TinyBasicInterpreter {
         switch (statementNode) {
             case StatementNode.Assignment assignmentStatement -> {
                 switch (assignmentStatement.assignmentTargetNode()) {
-                    case AssignmentTargetNode.VariableTarget variableTarget -> this.setVariable(variableTarget.variable(), this.evaluateNumericExpression(lineNumber, currentStatementIndex, assignmentStatement.numericExpressionNode()));
-                    case AssignmentTargetNode.ArrayElementTarget arrayElementTarget -> this.setArray(lineNumber, currentStatementIndex, this.evaluateNumericExpression(lineNumber, currentStatementIndex, arrayElementTarget.arrayIndexExpression()), this.evaluateNumericExpression(lineNumber, currentStatementIndex, assignmentStatement.numericExpressionNode()));
+                    case AssignmentTargetNode.VariableTarget variableTarget -> this.setVariable(variableTarget.variable(), this.evaluateExpressionToNumericValue(lineNumber, currentStatementIndex, assignmentStatement.expressionNode()));
+                    case AssignmentTargetNode.ArrayElementTarget arrayElementTarget -> this.setArray(lineNumber, currentStatementIndex, this.evaluateExpressionToNumericValue(lineNumber, currentStatementIndex, arrayElementTarget.arrayIndexExpression()), this.evaluateExpressionToNumericValue(lineNumber, currentStatementIndex, assignmentStatement.expressionNode()));
                 }
             }
-            case StatementNode.Goto(NumericExpressionNode targetExpression) -> {
-                 short jumpTargetLineNumber = this.evaluateNumericExpression(lineNumber, currentStatementIndex, targetExpression);
+            case StatementNode.Goto(ExpressionNode targetExpression) -> {
+                 short jumpTargetLineNumber = this.evaluateExpressionToNumericValue(lineNumber, currentStatementIndex, targetExpression);
                  if (jumpTargetLineNumber < 0) {
                      throw new TinyBasicNegativeTargetException(normalizeLineNumber(lineNumber), currentStatementIndex, JumpType.GOTO, jumpTargetLineNumber);
                  }
@@ -134,8 +134,8 @@ public final class TinyBasicInterpreter {
                  this.setLineIndex(jumpTargetLineIndex);
                  this.setStatementIndex(0);
             }
-            case StatementNode.GoSub(NumericExpressionNode targetExpression) -> {
-                short subroutineLineNumber = this.evaluateNumericExpression(lineNumber, currentStatementIndex, targetExpression);
+            case StatementNode.GoSub(ExpressionNode targetExpression) -> {
+                short subroutineLineNumber = this.evaluateExpressionToNumericValue(lineNumber, currentStatementIndex, targetExpression);
                 if (subroutineLineNumber < 0) {
                     throw new TinyBasicNegativeTargetException(normalizeLineNumber(lineNumber), currentStatementIndex, JumpType.GOSUB, subroutineLineNumber);
                 }
@@ -163,9 +163,9 @@ public final class TinyBasicInterpreter {
                     this.skipToNextLine();
                 }
             }
-            case StatementNode.For(Variable loopVariable, NumericExpressionNode startValueExpression, NumericExpressionNode endValueExpression) -> {
-                short startingValue = this.evaluateNumericExpression(lineNumber, currentStatementIndex, startValueExpression);
-                short endValue = this.evaluateNumericExpression(lineNumber, currentStatementIndex, endValueExpression);
+            case StatementNode.For(Variable loopVariable, ExpressionNode startValueExpression, ExpressionNode endValueExpression) -> {
+                short startingValue = this.evaluateExpressionToNumericValue(lineNumber, currentStatementIndex, startValueExpression);
+                short endValue = this.evaluateExpressionToNumericValue(lineNumber, currentStatementIndex, endValueExpression);
                 this.setVariable(loopVariable, startingValue);
                 this.loopFrames[loopVariable.getIndex()] = new LoopFrame(endValue, new ProgramIndex(this.getLineIndex(), this.getStatementIndex()));
             }
@@ -217,9 +217,9 @@ public final class TinyBasicInterpreter {
     }
 
     private void printElement(int lineNumber, int currentStatementIndex, StatementNode.Print.Element printElement, StringBuilder sb) throws TinyBasicInterpreterException {
-        String printed = switch (printElement.numericExpressionListNode()) {
+        String printed = switch (printElement.expressionListNode()) {
             case StringNode(String contents) -> contents;
-            case NumericExpressionNode numericExpressionNode -> String.valueOf(this.evaluateNumericExpression(lineNumber, currentStatementIndex, numericExpressionNode));
+            case ExpressionNode expressionNode -> String.valueOf(this.evaluateExpressionToNumericValue(lineNumber, currentStatementIndex, expressionNode));
         };
         this.incrementTerminalColumn(printed.length());
         sb.append(printed);
@@ -241,7 +241,7 @@ public final class TinyBasicInterpreter {
         short value = this.host.input();
         switch (assignmentTargetNode) {
             case AssignmentTargetNode.VariableTarget(Variable variable) -> this.setVariable(variable, value);
-            case AssignmentTargetNode.ArrayElementTarget(NumericExpressionNode arrayIndexExpression) -> this.setArray(lineNumber, currentStatementIndex, this.evaluateNumericExpression(lineNumber, currentStatementIndex, arrayIndexExpression), value);
+            case AssignmentTargetNode.ArrayElementTarget(ExpressionNode arrayIndexExpression) -> this.setArray(lineNumber, currentStatementIndex, this.evaluateExpressionToNumericValue(lineNumber, currentStatementIndex, arrayIndexExpression), value);
         }
     }
 
@@ -250,6 +250,13 @@ public final class TinyBasicInterpreter {
             throw new IllegalArgumentException("Cannot increment terminal column index by a negative amount!");
         }
         this.currentTerminalColumn = Math.addExact(this.currentTerminalColumn, incrementAmount);
+    }
+
+    private short evaluateExpressionToNumericValue(int lineNumber, int currentStatementIndex, ExpressionNode expressionNode) throws TinyBasicInterpreterException {
+        return (short) switch (expressionNode) {
+            case NumericExpressionNode numericExpressionNode -> this.evaluateNumericExpression(lineNumber, currentStatementIndex, numericExpressionNode);
+            case BooleanExpressionNode booleanExpressionNode -> this.evaluateBooleanExpression(lineNumber, currentStatementIndex, booleanExpressionNode) ? 1 : 0;
+        };
     }
 
     private boolean evaluateBooleanExpression(int lineNumber, int currentStatementIndex, BooleanExpressionNode booleanExpressionNode) throws TinyBasicInterpreterException {
@@ -285,13 +292,13 @@ public final class TinyBasicInterpreter {
         short value = (short) switch (numericExpressionNode) {
             case NumericExpressionNode.NumberNode numberNode -> numberNode.value();
             case NumericExpressionNode.VariableNode variableNode -> this.getVariable(variableNode.variable());
-            case NumericExpressionNode.ArrayReferenceNode arrayReferenceNode -> this.getArray(lineNumber, currentStatementIndex, this.evaluateNumericExpression(lineNumber, currentStatementIndex, arrayReferenceNode.arrayIndexExpression()));
+            case NumericExpressionNode.ArrayReferenceNode arrayReferenceNode -> this.getArray(lineNumber, currentStatementIndex, this.evaluateExpressionToNumericValue(lineNumber, currentStatementIndex, arrayReferenceNode.arrayIndexExpression()));
             case NumericExpressionNode.AscFunctionNode ascFunctionNode -> !ascFunctionNode.argumentString().isEmpty() ? (short) ascFunctionNode.argumentString().charAt(0) : 0;
-            case NumericExpressionNode.AbsFunctionNode absFunctionNode -> Math.abs(this.evaluateNumericExpression(lineNumber, currentStatementIndex, absFunctionNode.argumentExpression()));
-            case NumericExpressionNode.RndFunctionNode rndFunctionNode -> this.getRandom(lineNumber, currentStatementIndex, this.evaluateNumericExpression(lineNumber, currentStatementIndex, rndFunctionNode.argumentExpression()));
-            case NumericExpressionNode.SubExpressionNode subExpressionNode -> this.evaluateNumericExpression(lineNumber, currentStatementIndex, subExpressionNode.argumentExpression());
+            case NumericExpressionNode.AbsFunctionNode absFunctionNode -> Math.abs(this.evaluateExpressionToNumericValue(lineNumber, currentStatementIndex, absFunctionNode.argumentExpression()));
+            case NumericExpressionNode.RndFunctionNode rndFunctionNode -> this.getRandom(lineNumber, currentStatementIndex, this.evaluateExpressionToNumericValue(lineNumber, currentStatementIndex, rndFunctionNode.argumentExpression()));
+            case NumericExpressionNode.SubExpressionNode subExpressionNode -> this.evaluateExpressionToNumericValue(lineNumber, currentStatementIndex, subExpressionNode.argumentExpression());
             case NumericExpressionNode.SgnFunctionNode sgnFunctionNode -> {
-                short val = this.evaluateNumericExpression(lineNumber, currentStatementIndex, sgnFunctionNode.argumentExpression());
+                short val = this.evaluateExpressionToNumericValue(lineNumber, currentStatementIndex, sgnFunctionNode.argumentExpression());
                 yield val > 0 ? 1 : (val < 0 ? -1 : 0);
             }
             case NumericExpressionNode.BinaryOperationExpressionNode binaryOperationExpressionNode -> {
