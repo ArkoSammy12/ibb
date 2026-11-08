@@ -84,9 +84,14 @@ public final class TinyBasicParser {
                 }
                 case IF -> {
                     BooleanExpressionNode conditionalExpressionNode = this.parseAndExpectBooleanExpression(context);
-                    this.expect(context, thenToken -> thenToken instanceof KeywordToken thenKeywordToken && thenKeywordToken.getKeyword() == Keyword.THEN, "'then' to begin 'if' statement body");
-                    StatementNode statementNode = this.parseStatement(context);
-                    yield new StatementNode.If(conditionalExpressionNode, statementNode);
+                    yield switch (context.poll()) {
+                        case KeywordToken ifKeyword -> switch (ifKeyword.getKeyword()) {
+                            case THEN -> new StatementNode.If(conditionalExpressionNode, this.parseStatement(context));
+                            case GOTO -> new StatementNode.Goto(this.parseExpression(context));
+                            default -> throw new TinyBasicParseException("Expected 'then' or 'goto' to begin 'if' statement body!", ifKeyword.getSourcePosition());
+                        };
+                        case Token token -> throw new TinyBasicParseException("Expected 'then' or 'goto' to begin 'if' statement body!", token.getSourcePosition());
+                    };
                 }
                 case FOR -> {
                     Variable loopVariable = this.parseVariable(context);
@@ -98,7 +103,7 @@ public final class TinyBasicParser {
                 }
                 default -> throw new TinyBasicParseException("Illegal start of statement '%s'!".formatted(keywordToken.getLexeme()), keywordToken.getSourcePosition());
             };
-            case EndOfLineToken endOfLineToken -> new StatementNode.Rem();
+            case EndOfLineToken _ -> new StatementNode.Rem();
             case Token token -> throw new TinyBasicParseException("Illegal start of statement '%s'!".formatted(token.getLexeme()), token.getSourcePosition());
         };
     }
