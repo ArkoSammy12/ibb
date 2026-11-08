@@ -255,10 +255,15 @@ public final class Ibb implements TinyBasicInterpreterHost {
     public short input() {
         Integer input = null;
         do {
+            String s = IO.readln("> ");
             try {
-                input = Integer.parseInt(IO.readln("> "));
+                input = Integer.parseInt(s);
             } catch (NumberFormatException e) {
-                IO.println("Please enter a valid number!");
+                if (s.isEmpty()) {
+                    IO.println("Please enter a valid number or character!");
+                } else {
+                    input = (int) s.charAt(0);
+                }
             }
         } while (input == null);
         return (short) ((int) input);
