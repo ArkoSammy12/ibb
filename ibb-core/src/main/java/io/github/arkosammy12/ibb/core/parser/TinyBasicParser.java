@@ -204,15 +204,6 @@ public final class TinyBasicParser {
         };
     }
 
-
-    private BooleanExpressionNode parseAndExpectBooleanExpression(TinyBasicParserContext context) throws TinyBasicParseException {
-        SourcePosition expressionStartPosition = context.peek().getSourcePosition();
-        return switch (this.parseExpression(context)) {
-            case BooleanExpressionNode booleanExpressionNode -> booleanExpressionNode;
-            case NumericExpressionNode _ -> throw new TinyBasicParseException("Expected boolean expression!", expressionStartPosition);
-        };
-    }
-
     private ExpressionNode parseExpression(TinyBasicParserContext context) throws TinyBasicParseException {
         return this.parseExpressionRest(context, this.parseBooleanExpressionTerm(context));
     }
