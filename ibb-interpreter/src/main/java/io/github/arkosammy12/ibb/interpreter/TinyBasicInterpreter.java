@@ -35,10 +35,6 @@ public final class TinyBasicInterpreter {
         this.printZoneWidth = printZoneWidth;
     }
 
-    public void cls() {
-        this.currentTerminalColumn = 0;
-    }
-
     public void removeLine(int lineNumber) {
         if (lineNumber < 0) {
             throw new IllegalArgumentException("The provided line number to remove '%d' cannot be negative!".formatted(lineNumber));
