@@ -100,7 +100,7 @@ public final class TinyBasicParser {
                 }
                 default -> throw new TinyBasicParseException("Illegal start of statement '%s'!".formatted(keywordToken.getLexeme()), keywordToken.getSourcePosition());
             };
-            case EndOfLineToken endOfLineToken -> throw new TinyBasicParseException("Expected start of statement!", endOfLineToken.getSourcePosition());
+            case EndOfLineToken endOfLineToken -> new StatementNode.Rem();
             case Token token -> throw new TinyBasicParseException("Illegal start of statement '%s'!".formatted(token.getLexeme()), token.getSourcePosition());
         };
     }
