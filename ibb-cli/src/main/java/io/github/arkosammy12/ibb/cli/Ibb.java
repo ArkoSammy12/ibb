@@ -55,20 +55,7 @@ public final class Ibb implements TinyBasicInterpreterHost {
 
         this.running = true;
 
-        println("""
-                Welcome to %s version v%s, a Tiny BASIC interpreter!
-               \s
-                Below are the available interpreter commands:
-                clear: Reset the state of the interpreter.
-                new: Reset the state of the interpreter and remove the currently stored Tiny BASIC program.
-                run: Run the currently stored.
-                list: Print all lines of the currently stored Tiny BASIC program.
-                save <path>: Save the currently stored Tiny BASIC program to the provided file path.
-                load <path>: Replace the currently stored Tiny BASIC program with the one read from the provided path.
-                exit: Quit the Tiny BASIC interpreter and exit.\s
-
-                Press Ctrl+C to break the currently running Tiny BASIC program.
-               \s""".formatted(MavenProperties.ARTIFACT_ID, MavenProperties.VERSION));
+        printHelpMessage();
 
         while (this.running) {
             String input = readln(PROMPT);
@@ -83,6 +70,7 @@ public final class Ibb implements TinyBasicInterpreterHost {
                     case "clear" -> this.handleClear();
                     case "list" -> this.handleList();
                     case "run" -> this.handleRun();
+                    case "help" -> this.handleHelp();
                     case "exit" -> this.handleExit();
                     default -> {
                         if (allDigits(strippedInput)) {
@@ -113,6 +101,10 @@ public final class Ibb implements TinyBasicInterpreterHost {
 
     private void handleList() {
         this.interpreter.list().forEach(IO::println);
+    }
+
+    private void handleHelp() {
+        printHelpMessage();
     }
 
     private void handleExit() {
@@ -322,6 +314,56 @@ public final class Ibb implements TinyBasicInterpreterHost {
             return Optional.empty();
         }
         return Optional.of(Paths.get(arg));
+    }
+
+    private static void printHelpMessage() {
+        println("""
+               +---------------------------------------------- %s v%s (Itsy Bitsy BASIC) ------------------------------------------------+
+               | Commands:                                                                                                               |
+               | - clear: Reset the state of the interpreter.                                                                            |
+               | - new: Reset the state of the interpreter and remove the currently stored Tiny BASIC program.                           |
+               | - run: Run the currently stored Tiny BASIC program.                                                                     |
+               | - list: Print all lines of the currently stored Tiny BASIC program.                                                     |
+               | - save <path>: Save the currently stored Tiny BASIC program to the provided file path.                                  |
+               | - load <path>: Replace the currently stored Tiny BASIC program with the program read from the provided file path.       |
+               | - exit: Quit the Tiny BASIC interpreter and exit.                                                                       |
+               | - help: Print this help message.                                                                                        |
+               | You can break out of the currently running Tiny BASIC program by pressing Ctrl+C.                                       |
+               |                                                                                                                         |
+               | Statements:                                                                                                             |
+               | [let] <var> = <expr>                                                                                                    |
+               | goto <expr>                                                                                                             |
+               | gosub <expr>                                                                                                            |
+               | return                                                                                                                  |
+               | if <expr> then <statement>                                                                                              |
+               | for <var> = <expr> to <expr>                                                                                            |
+               | next <var>                                                                                                              |
+               | print [expr|string] [(,|;) <expr|string>]*[;|,]                                                                         |
+               | input [string] <var> [, <var>]*                                                                                         |
+               | rem <text> or '<text>                                                                                                   |
+               | end                                                                                                                     |
+               |                                                                                                                         |
+               | Operators:                                                                                                              |
+               | - Unary: +, -, not                                                                                                      |
+               | - Binary: +, -, *, /, \\, mod, <, <=, >, >=, =, <>, ><, and, or                                                         |
+               |                                                                                                                         |
+               | Variables:                                                                                                              |
+               | - Letters: A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z.                                |
+               | - Array: @(expr)                                                                                                        |
+               |                                                                                                                         |
+               | Functions:                                                                                                              |
+               | - SGN(expr): Returns 1 if the argument is positive, -1 if it is negative, 0 if it is 0.                                 |
+               | - ABS(expr): Returns the absolute value of the argument.                                                                |
+               | - ASC(string): Returns the ASCII value of the first character of the string argument.                                   |
+               | - RND(expr): Returns a random value between 1 and the argument, inclusive. The argument cannot be 0 or negative.        |
+               |                                                                                                                         |
+               | Notes:                                                                                                                  |
+               | - Expressions may grouped with ().                                                                                      |
+               | - Numeric expressions may be converted to boolean values by performing a '!= 0' comparison.                             |
+               | - Boolean expressions may be converted to numeric values by evaluating to 1 if it is 'true' or 0 if it is 'false'.      |
+               | - The syntax is case insensitive.                                                                                       |
+               +-------------------------------------------------------------------------------------------------------------------------+
+               """.formatted(MavenProperties.ARTIFACT_ID, MavenProperties.VERSION));
     }
 
     private record InsertedLine(String rawLine, LineNode lineNode) {}
