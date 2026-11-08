@@ -11,6 +11,7 @@ import io.github.arkosammy12.ibb.interpreter.TinyBasicInterpreter;
 import io.github.arkosammy12.ibb.interpreter.TinyBasicInterpreterHost;
 import io.github.arkosammy12.ibb.interpreter.exception.*;
 
+import java.nio.file.InvalidPathException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -119,7 +120,14 @@ public final class Ibb implements TinyBasicInterpreterHost {
     }
 
     private void handleSave(String strippedInput) {
-        Optional<Path> optionalPath = getPathArgument(strippedInput);
+        Optional<Path> optionalPath;
+        try {
+            optionalPath = getPathArgument(strippedInput);
+        } catch (InvalidPathException e) {
+            IO.println("The provided 'save' path is invalid!");
+            return;
+        }
+
         if (optionalPath.isEmpty()) {
             IO.println("Must provide a path after the 'save' command!");
             return;
@@ -134,7 +142,14 @@ public final class Ibb implements TinyBasicInterpreterHost {
     }
 
     private void handleLoad(String strippedInput) {
-        Optional<Path> optionalPath = getPathArgument(strippedInput);
+        Optional<Path> optionalPath;
+        try {
+            optionalPath = getPathArgument(strippedInput);
+        } catch (InvalidPathException e) {
+            IO.println("The provided 'load' path is invalid!");
+            return;
+        }
+
         if (optionalPath.isEmpty()) {
             IO.println("Must provide a path after the 'load' command!");
             return;
@@ -208,17 +223,14 @@ public final class Ibb implements TinyBasicInterpreterHost {
     }
 
     private void handleEvalParseError(ParseError parseError, int row) {
-        Optional<SourcePosition> optionalSourcePosition = parseError.getSourcePosition();
+        Optional<SourcePosition> sourcePosition = parseError.getSourcePosition();
         String message = parseError.getMessage();
-        if (optionalSourcePosition.isEmpty()) {
+        if (sourcePosition.isEmpty()) {
             IO.println("?Syntax error: %s".formatted(message));
+        } else if (row >= 0) {
+            IO.println("?Syntax error in row '%d', column '%d': %s".formatted(row + 1, sourcePosition.get().column() + 1, message));
         } else {
-            SourcePosition sourcePosition = optionalSourcePosition.get();
-            if (row >= 0) {
-                IO.println("?Syntax error in row '%d', column '%d': %s".formatted(row + 1, sourcePosition.column() + 1, message));
-            } else {
-                IO.println("?Syntax error in column '%d': %s".formatted(sourcePosition.column() + 1, message));
-            }
+            IO.println("?Syntax error in column '%d': %s".formatted(sourcePosition.get().column() + 1, message));
         }
     }
 
