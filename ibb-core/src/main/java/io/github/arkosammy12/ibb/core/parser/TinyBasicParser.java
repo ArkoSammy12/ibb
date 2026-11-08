@@ -88,6 +88,7 @@ public final class TinyBasicParser {
                         case KeywordToken ifKeyword -> switch (ifKeyword.getKeyword()) {
                             case THEN -> new StatementNode.If(conditionalExpressionNode, this.parseStatement(context));
                             case GOTO -> new StatementNode.If(conditionalExpressionNode, new StatementNode.Goto(this.parseExpression(context)));
+                            case GOSUB -> new StatementNode.If(conditionalExpressionNode, new StatementNode.GoSub(this.parseExpression(context)));
                             default -> throw new TinyBasicParseException("Expected 'then' or 'goto' to begin 'if' statement body!", ifKeyword.getSourcePosition());
                         };
                         case Token token -> throw new TinyBasicParseException("Expected 'then' or 'goto' to begin 'if' statement body!", token.getSourcePosition());
