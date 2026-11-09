@@ -4,95 +4,31 @@ import io.github.arkosammy12.ibb.core.grammar.Variable;
 
 public sealed interface NumericExpressionNode extends ExpressionNode {
 
-    UnaryOperator getUnaryOperator();
+    record VariableNode(Variable variable) implements NumericExpressionNode {}
 
-    record VariableNode(UnaryOperator unaryOperator, Variable variable) implements NumericExpressionNode {
+    record NumberNode(short value) implements NumericExpressionNode {}
 
-        @Override
-        public UnaryOperator getUnaryOperator() {
-            return this.unaryOperator();
-        }
+    record ArrayReferenceNode(ExpressionNode arrayIndexExpression) implements NumericExpressionNode {}
 
-    }
+    record AbsFunctionNode(ExpressionNode argumentExpression) implements NumericExpressionNode { }
 
-    record NumberNode(UnaryOperator unaryOperator, short value) implements NumericExpressionNode {
+    record AscFunctionNode(String argumentString) implements NumericExpressionNode {}
 
-        @Override
-        public UnaryOperator getUnaryOperator() {
-            return this.unaryOperator();
-        }
+    record RndFunctionNode(ExpressionNode argumentExpression) implements NumericExpressionNode {}
 
-    }
+    record SgnFunctionNode(ExpressionNode argumentExpression) implements NumericExpressionNode {}
 
-    record ArrayReferenceNode(UnaryOperator unaryOperator, ExpressionNode arrayIndexExpression) implements NumericExpressionNode {
+    record UnaryNumericExpression(UnaryOperator unaryOperator, ExpressionNode argumentExpression) implements NumericExpressionNode {}
 
-        @Override
-        public UnaryOperator getUnaryOperator() {
-            return this.unaryOperator();
-        }
+    record BinaryNumericExpression(BinaryOperator binaryOperator, ExpressionNode lhs, ExpressionNode rhs) implements NumericExpressionNode {}
 
-    }
-
-    record AbsFunctionNode(UnaryOperator unaryOperator, ExpressionNode argumentExpression) implements NumericExpressionNode {
-
-        @Override
-        public UnaryOperator getUnaryOperator() {
-            return this.unaryOperator();
-        }
-
-    }
-
-    record AscFunctionNode(UnaryOperator unaryOperator, String argumentString) implements NumericExpressionNode {
-
-        @Override
-        public UnaryOperator getUnaryOperator() {
-            return this.unaryOperator();
-        }
-
-    }
-
-    record RndFunctionNode(UnaryOperator unaryOperator, ExpressionNode argumentExpression) implements NumericExpressionNode {
-
-        @Override
-        public UnaryOperator getUnaryOperator() {
-            return this.unaryOperator();
-        }
-
-    }
-
-    record SgnFunctionNode(UnaryOperator unaryOperator, ExpressionNode argumentExpression) implements NumericExpressionNode {
-
-        @Override
-        public UnaryOperator getUnaryOperator() {
-            return this.unaryOperator();
-        }
-
-    }
-
-    record SubExpressionNode(UnaryOperator unaryOperator, NumericExpressionNode argumentExpression) implements NumericExpressionNode {
-
-        @Override
-        public UnaryOperator getUnaryOperator() {
-            return this.unaryOperator();
-        }
-
-    }
-
-    record BinaryOperationExpressionNode(UnaryOperator unaryOperator, Operator operator, ExpressionNode lhs, ExpressionNode rhs) implements NumericExpressionNode {
-
-        @Override
-        public UnaryOperator getUnaryOperator() {
-            return this.unaryOperator();
-        }
-
-        public enum Operator {
-            ADD,
-            SUBTRACT,
-            MULTIPLY,
-            DIVIDE,
-            MODULO
-        }
-
+    enum BinaryOperator {
+        ADD,
+        SUBTRACT,
+        MULTIPLY,
+        DIVIDE,
+        MODULO,
+        POWER,
     }
 
     enum UnaryOperator {

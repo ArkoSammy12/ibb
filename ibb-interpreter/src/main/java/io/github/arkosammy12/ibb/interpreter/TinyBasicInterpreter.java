@@ -292,25 +292,29 @@ public final class TinyBasicInterpreter {
     }
 
     private short evaluateNumericExpression(int lineNumber, int currentStatementIndex, NumericExpressionNode numericExpressionNode) throws TinyBasicInterpreterException {
-        short value = (short) switch (numericExpressionNode) {
+        return (short) switch (numericExpressionNode) {
             case NumericExpressionNode.NumberNode numberNode -> numberNode.value();
             case NumericExpressionNode.VariableNode variableNode -> this.getVariable(variableNode.variable());
             case NumericExpressionNode.ArrayReferenceNode arrayReferenceNode -> this.getArray(lineNumber, currentStatementIndex, this.evaluateExpressionToNumericValue(lineNumber, currentStatementIndex, arrayReferenceNode.arrayIndexExpression()));
             case NumericExpressionNode.AscFunctionNode ascFunctionNode -> !ascFunctionNode.argumentString().isEmpty() ? (short) ascFunctionNode.argumentString().charAt(0) : 0;
             case NumericExpressionNode.AbsFunctionNode absFunctionNode -> Math.abs(this.evaluateExpressionToNumericValue(lineNumber, currentStatementIndex, absFunctionNode.argumentExpression()));
             case NumericExpressionNode.RndFunctionNode rndFunctionNode -> this.getRandom(lineNumber, currentStatementIndex, this.evaluateExpressionToNumericValue(lineNumber, currentStatementIndex, rndFunctionNode.argumentExpression()));
-            case NumericExpressionNode.SubExpressionNode subExpressionNode -> this.evaluateExpressionToNumericValue(lineNumber, currentStatementIndex, subExpressionNode.argumentExpression());
+            case NumericExpressionNode.UnaryNumericExpression subExpressionNode -> switch (subExpressionNode.unaryOperator()) {
+                case NONE, PLUS -> this.evaluateExpressionToNumericValue(lineNumber, currentStatementIndex, subExpressionNode.argumentExpression());
+                case MINUS -> -this.evaluateExpressionToNumericValue(lineNumber, currentStatementIndex, subExpressionNode.argumentExpression());
+            };
             case NumericExpressionNode.SgnFunctionNode sgnFunctionNode -> {
                 short val = this.evaluateExpressionToNumericValue(lineNumber, currentStatementIndex, sgnFunctionNode.argumentExpression());
                 yield val > 0 ? 1 : (val < 0 ? -1 : 0);
             }
-            case NumericExpressionNode.BinaryOperationExpressionNode binaryOperationExpressionNode -> {
+            case NumericExpressionNode.BinaryNumericExpression binaryOperationExpressionNode -> {
                 short lhs = this.evaluateExpressionToNumericValue(lineNumber, currentStatementIndex, binaryOperationExpressionNode.lhs());
                 short rhs = this.evaluateExpressionToNumericValue(lineNumber, currentStatementIndex, binaryOperationExpressionNode.rhs());
-                yield (short) switch (binaryOperationExpressionNode.operator()) {
+                yield (short) switch (binaryOperationExpressionNode.binaryOperator()) {
                     case ADD -> lhs + rhs;
                     case SUBTRACT -> lhs - rhs;
                     case MULTIPLY -> lhs * rhs;
+                    case POWER -> Math.pow(lhs, rhs);
                     case DIVIDE -> {
                         if (rhs == 0) {
                             throw new TinyBasicDivisionByZeroException(normalizeLineNumber(lineNumber), currentStatementIndex, lhs);
@@ -328,10 +332,6 @@ public final class TinyBasicInterpreter {
                 };
             }
         };
-        if (numericExpressionNode.getUnaryOperator() == NumericExpressionNode.UnaryOperator.MINUS) {
-            value = (short) -value;
-        }
-        return value;
     }
 
     private void setVariable(Variable variable, short value) {

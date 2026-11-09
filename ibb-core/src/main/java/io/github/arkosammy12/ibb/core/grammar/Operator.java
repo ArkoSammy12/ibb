@@ -6,6 +6,7 @@ public enum Operator implements Lexeme {
     TIMES("*"),
     DIVIDE_FORWARD("/"),
     DIVIDE_BACKWARD("\\"),
+    EXPONENT("^"),
     MOD("mod"),
     LESS_THAN("<"),
     LESS_THAN_OR_EQUALS("<="),
