@@ -27,17 +27,17 @@ Statements:
 goto <expr>
 gosub <expr>
 return
-if <expr> then <statement>
+if <expr> [then] <statement>
 for <var> = <expr> to <expr>
 next <var>
-print [expr|string] [(,|;) <expr|string>]*[;|,]
+print [expr|string|#expr] [(,|;) <expr|string|#expr>]*[;|,]
 input [string] <var> [, <var>]*
 rem <text> or '<text>
 end
 
 Operators:
 - Unary: +, -, not
-- Binary: +, -, *, /, \, mod, <, <=, >, >=, =, <>, ><, and, or
+- Binary: +, -, *, /, \, mod, ^, <, <=, >, >=, =, <>, ><, and, or
 
 Variables:
 - Letters: A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z.
