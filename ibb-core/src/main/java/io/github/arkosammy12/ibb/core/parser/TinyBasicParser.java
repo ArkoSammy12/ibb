@@ -330,15 +330,13 @@ public final class TinyBasicParser {
             };
             case Token token -> throw new TinyBasicParseException("Expected variable, number, array reference, function or expression enclosing in parenthesis, found '%s'!".formatted(token.getLexeme()), token.getSourcePosition());
         };
-        NumericExpressionNode.BinaryOperator binaryOperator = switch (context.peek()) {
-            case OperatorToken operatorToken when operatorToken.getOperator() == Operator.EXPONENT -> NumericExpressionNode.BinaryOperator.POWER;
-            default -> null;
+        return switch (context.peek()) {
+            case OperatorToken operatorToken when operatorToken.getOperator() == Operator.EXPONENT -> {
+                context.poll();
+                yield new NumericExpressionNode.BinaryNumericOperation(NumericExpressionNode.BinaryOperator.POWER, lhs, this.parseNumericFactor(context));
+            }
+            default -> lhs;
         };
-        if (binaryOperator == null) {
-            return lhs;
-        }
-        context.poll();
-        return new NumericExpressionNode.BinaryNumericOperation(binaryOperator, lhs, this.parseNumericFactor(context));
     }
 
 }
