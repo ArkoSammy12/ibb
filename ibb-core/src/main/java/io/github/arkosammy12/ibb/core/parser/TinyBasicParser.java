@@ -7,7 +7,6 @@ import io.github.arkosammy12.ibb.core.grammar.Operator;
 import io.github.arkosammy12.ibb.core.grammar.Variable;
 import io.github.arkosammy12.ibb.core.lexer.*;
 import io.github.arkosammy12.ibb.core.result.ParseResult;
-import io.github.arkosammy12.ibb.core.util.SourcePosition;
 import io.github.arkosammy12.ibb.core.util.SourceStream;
 
 import java.util.ArrayList;
@@ -196,37 +195,17 @@ public final class TinyBasicParser {
         }
     }
 
-    private NumericExpressionNode parseAndExpectNumericExpression(TinyBasicParserContext context) throws TinyBasicParseException {
-        SourcePosition expressionStartPosition = context.peek().getSourcePosition();
-        return switch (this.parseNumericExpression(context)) {
-            case NumericExpressionNode numericExpressionNode -> numericExpressionNode;
-            case BooleanExpressionNode _ -> throw new TinyBasicParseException("Expected numeric expression!", expressionStartPosition);
-        };
-    }
-
     private ExpressionNode parseExpression(TinyBasicParserContext context) throws TinyBasicParseException {
         return this.parseExpressionRest(context, this.parseBooleanExpressionTerm(context));
     }
 
     private ExpressionNode parseExpressionRest(TinyBasicParserContext context, ExpressionNode lhs) throws TinyBasicParseException {
-        Token upcomingToken = context.peek();
-        BooleanExpressionNode.BinaryOperator booleanBinaryOperator = switch (upcomingToken) {
-            case OperatorToken operatorToken when operatorToken.getOperator() == Operator.OR -> BooleanExpressionNode.BinaryOperator.OR;
-            default -> null;
-        };
-        if (booleanBinaryOperator == null) {
-            return lhs;
-        }
-        return switch (lhs) {
-            case BooleanExpressionNode lhsBooleanExpressionNode -> {
+        return switch (context.peek()) {
+            case OperatorToken operatorToken when operatorToken.getOperator() == Operator.OR -> {
                 context.poll();
-                BooleanExpressionNode rhsBooleanExpressionNode = switch (this.parseBooleanExpressionTerm(context)) {
-                    case BooleanExpressionNode booleanExpressionNode -> booleanExpressionNode;
-                    case NumericExpressionNode _ -> throw new TinyBasicParseException("Cannot apply operator '%s' to numeric expression!".formatted(upcomingToken.getLexeme()), upcomingToken.getSourcePosition());
-                };
-                yield this.parseExpressionRest(context, new BooleanExpressionNode.BinaryBooleanOperation(booleanBinaryOperator, lhsBooleanExpressionNode, rhsBooleanExpressionNode));
+                yield this.parseExpressionRest(context, new BooleanExpressionNode.BinaryBooleanOperation(BooleanExpressionNode.BinaryOperator.OR, lhs, this.parseBooleanExpressionTerm(context)));
             }
-            case NumericExpressionNode _ -> throw new TinyBasicParseException("Cannot apply operator '%s' to numeric expression!".formatted(upcomingToken.getLexeme()), upcomingToken.getSourcePosition());
+            default -> lhs;
         };
     }
 
@@ -235,37 +214,21 @@ public final class TinyBasicParser {
     }
 
     private ExpressionNode parseBooleanExpressionTermRest(TinyBasicParserContext context, ExpressionNode lhs) throws TinyBasicParseException {
-        Token upcomingToken = context.peek();
-        BooleanExpressionNode.BinaryOperator booleanBinaryOperator = switch (upcomingToken) {
-            case OperatorToken operatorToken when operatorToken.getOperator() == Operator.AND -> BooleanExpressionNode.BinaryOperator.AND;
-            default -> null;
-        };
-        if (booleanBinaryOperator == null) {
-            return lhs;
-        }
-        return switch (lhs) {
-            case BooleanExpressionNode lhsBooleanExpressionNode -> {
+        return switch (context.peek()) {
+            case OperatorToken operatorToken when operatorToken.getOperator() == Operator.AND -> {
                 context.poll();
-                BooleanExpressionNode rhsBooleanExpressionNode = switch (this.parseBooleanOperand(context)) {
-                    case BooleanExpressionNode booleanExpressionNode -> booleanExpressionNode;
-                    case NumericExpressionNode _ -> throw new TinyBasicParseException("Cannot apply operator '%s' to numeric expression!".formatted(upcomingToken.getLexeme()), upcomingToken.getSourcePosition());
-                };
-                yield this.parseBooleanExpressionTermRest(context, new BooleanExpressionNode.BinaryBooleanOperation(booleanBinaryOperator, lhsBooleanExpressionNode, rhsBooleanExpressionNode));
+                yield this.parseBooleanExpressionTermRest(context, new BooleanExpressionNode.BinaryBooleanOperation(BooleanExpressionNode.BinaryOperator.AND, lhs, this.parseBooleanOperand(context)));
             }
-            case NumericExpressionNode _ -> throw new TinyBasicParseException("Cannot apply operator '%s' to numeric expression!".formatted(upcomingToken.getLexeme()), upcomingToken.getSourcePosition());
+            default -> lhs;
         };
     }
 
     private ExpressionNode parseBooleanOperand(TinyBasicParserContext context) throws TinyBasicParseException {
-        Token upcomingToken = context.peek();
-        BooleanExpressionNode.UnaryOperator booleanUnaryOperator = BooleanExpressionNode.UnaryOperator.NONE;
-        if (upcomingToken instanceof OperatorToken operatorToken && operatorToken.getOperator() == Operator.NOT) {
-            context.poll();
-            booleanUnaryOperator = BooleanExpressionNode.UnaryOperator.NOT;
-        }
-        ExpressionNode lhs = this.parseNumericExpression(context);
-        Token nextToken = context.peek();
-        BooleanExpressionNode.RelationalOperation relationalOperation = switch (nextToken) {
+        return this.parseBooleanOperandRest(context, this.parseNumericExpression(context));
+    }
+
+    private ExpressionNode parseBooleanOperandRest(TinyBasicParserContext context, ExpressionNode lhs) throws TinyBasicParseException {
+        BooleanExpressionNode.RelationalOperation relationalOperation = switch (context.peek()) {
             case OperatorToken operatorToken -> switch (operatorToken.getOperator()) {
                 case LESS_THAN -> BooleanExpressionNode.RelationalOperation.LESS_THAN;
                 case LESS_THAN_OR_EQUALS -> BooleanExpressionNode.RelationalOperation.LESS_THAN_OR_EQUALS;
@@ -278,24 +241,10 @@ public final class TinyBasicParser {
             default -> null;
         };
         if (relationalOperation == null) {
-            return switch (lhs) {
-                case NumericExpressionNode numericExpressionNode -> {
-                    if (booleanUnaryOperator != BooleanExpressionNode.UnaryOperator.NONE) {
-                        throw new TinyBasicParseException("Cannot apply unary operator 'not' to numeric expression!", upcomingToken.getSourcePosition());
-                    }
-                    yield numericExpressionNode;
-                }
-                case BooleanExpressionNode booleanExpressionNode -> new BooleanExpressionNode.UnaryBooleanExpression(booleanUnaryOperator, booleanExpressionNode);
-            };
+            return lhs;
         }
-        return switch (lhs) {
-            case NumericExpressionNode lhsNumericExpressionNode -> {
-                context.poll();
-                NumericExpressionNode rhsNumericExpressionNode = this.parseAndExpectNumericExpression(context);
-                yield new BooleanExpressionNode.RelationalOperationNode(booleanUnaryOperator, relationalOperation, lhsNumericExpressionNode, rhsNumericExpressionNode);
-            }
-            case BooleanExpressionNode _ -> throw new TinyBasicParseException("Cannot apply operator '%s' to boolean expression!".formatted(nextToken.getLexeme()), nextToken.getSourcePosition());
-        };
+        context.poll();
+        return this.parseBooleanOperandRest(context, new BooleanExpressionNode.RelationalOperationNode(relationalOperation, lhs, this.parseNumericExpression(context)));
     }
 
     private ExpressionNode parseNumericExpression(TinyBasicParserContext context) throws TinyBasicParseException {
@@ -315,16 +264,15 @@ public final class TinyBasicParser {
             return lhs;
         }
         context.poll();
-        return this.parseNumericExpressionRest(context, new NumericExpressionNode.BinaryNumericExpression(binaryOperator, lhs, this.parseNumericTerm(context)));
+        return this.parseNumericExpressionRest(context, new NumericExpressionNode.BinaryNumericOperation(binaryOperator, lhs, this.parseNumericTerm(context)));
     }
 
     private ExpressionNode parseNumericTerm(TinyBasicParserContext context) throws TinyBasicParseException {
-        return this.parseNumericTermRest(context, this.parseUnary(context, NumericExpressionNode.UnaryOperator.NONE));
+        return this.parseNumericTermRest(context, this.parseNumericFactor(context));
     }
 
     private ExpressionNode parseNumericTermRest(TinyBasicParserContext context, ExpressionNode lhs) throws TinyBasicParseException {
-        Token nextToken = context.peek();
-        NumericExpressionNode.BinaryOperator binaryOperator = switch (nextToken) {
+        NumericExpressionNode.BinaryOperator binaryOperator = switch (context.peek()) {
             case OperatorToken operatorToken -> switch (operatorToken.getOperator()) {
                 case TIMES -> NumericExpressionNode.BinaryOperator.MULTIPLY;
                 case DIVIDE_FORWARD, DIVIDE_BACKWARD -> NumericExpressionNode.BinaryOperator.DIVIDE;
@@ -337,55 +285,32 @@ public final class TinyBasicParser {
             return lhs;
         }
         context.poll();
-        return this.parseNumericTermRest(context, new NumericExpressionNode.BinaryNumericExpression(binaryOperator, lhs, this.parseUnary(context, NumericExpressionNode.UnaryOperator.NONE)));
-    }
-
-    private ExpressionNode parseUnary(TinyBasicParserContext context, NumericExpressionNode.UnaryOperator unaryOperator) throws TinyBasicParseException {
-        Token upcomingToken = context.peek();
-        if (upcomingToken instanceof OperatorToken operatorToken) {
-            switch (operatorToken.getOperator()) {
-                case PLUS -> {
-                    context.poll();
-                    return this.parseUnary(context, unaryOperator);
-                }
-                case MINUS -> {
-                    context.poll();
-                    return this.parseUnary(context, switch (unaryOperator) {
-                        case NONE, PLUS -> NumericExpressionNode.UnaryOperator.MINUS;
-                        case MINUS -> NumericExpressionNode.UnaryOperator.PLUS;
-                    });
-                }
-            }
-        }
-        return new NumericExpressionNode.UnaryNumericExpression(unaryOperator, this.parsePower(context));
-    }
-
-    private ExpressionNode parsePower(TinyBasicParserContext context) throws TinyBasicParseException {
-        return this.parsePowerRest(context, this.parseNumericFactor(context));
-    }
-
-    private ExpressionNode parsePowerRest(TinyBasicParserContext context, ExpressionNode lhs) throws TinyBasicParseException {
-        NumericExpressionNode.BinaryOperator binaryOperator = switch (context.peek()) {
-            case OperatorToken operatorToken when operatorToken.getOperator() == Operator.EXPONENT -> NumericExpressionNode.BinaryOperator.POWER;
-            default -> null;
-        };
-        if (binaryOperator == null) {
-            return lhs;
-        }
-        context.poll();
-        return new NumericExpressionNode.BinaryNumericExpression(binaryOperator, lhs, this.parsePowerRest(context, this.parseNumericFactor(context)));
+        return this.parseNumericTermRest(context, new NumericExpressionNode.BinaryNumericOperation(binaryOperator, lhs, this.parseNumericFactor(context)));
     }
 
     private ExpressionNode parseNumericFactor(TinyBasicParserContext context) throws TinyBasicParseException {
-        return switch (context.poll()) {
+        if (context.peek() instanceof OperatorToken operatorToken) {
+            switch (operatorToken.getOperator()) {
+                case PLUS -> {
+                    context.poll();
+                    return new NumericExpressionNode.UnaryNumericExpression(NumericExpressionNode.UnaryOperator.PLUS, this.parseNumericFactor(context));
+                }
+                case MINUS -> {
+                    context.poll();
+                    return new NumericExpressionNode.UnaryNumericExpression(NumericExpressionNode.UnaryOperator.MINUS, this.parseNumericFactor(context));
+                }
+                case NOT -> {
+                    context.poll();
+                    return new BooleanExpressionNode.UnaryBooleanExpression(BooleanExpressionNode.UnaryOperator.NOT, this.parseNumericFactor(context));
+                }
+            }
+        }
+        ExpressionNode lhs = switch (context.poll()) {
             case VariableToken variableToken -> new NumericExpressionNode.VariableNode(variableToken.getVariable());
             case NumberToken numberToken -> new NumericExpressionNode.NumberNode((short) numberToken.getValue());
             case ArraySigilToken _ -> new NumericExpressionNode.ArrayReferenceNode(this.parseParenthesizedExpression(context, "array reference expression"));
-            case DelimiterToken delimiterToken -> {
-                if (delimiterToken.getDelimiter() != Delimiter.LEFT_PARENTHESIS) {
-                    throw new TinyBasicParseException("Expected '(' to begin expression, found '%s!".formatted(delimiterToken.getLexeme()), delimiterToken.getSourcePosition());
-                }
-                ExpressionNode expressionNode = new NumericExpressionNode.UnaryNumericExpression(NumericExpressionNode.UnaryOperator.NONE, this.parseExpression(context));
+            case DelimiterToken delimiterToken when delimiterToken.getDelimiter() == Delimiter.LEFT_PARENTHESIS -> {
+                ExpressionNode expressionNode = this.parseExpression(context);
                 this.expect(context, closing -> closing instanceof DelimiterToken closingDelimiter && closingDelimiter.getDelimiter() == Delimiter.RIGHT_PARENTHESIS, "')' to end expression");
                 yield expressionNode;
             }
@@ -406,6 +331,15 @@ public final class TinyBasicParser {
             };
             case Token token -> throw new TinyBasicParseException("Expected variable, number, array reference, function or expression enclosing in parenthesis, found '%s'!".formatted(token.getLexeme()), token.getSourcePosition());
         };
+        NumericExpressionNode.BinaryOperator binaryOperator = switch (context.peek()) {
+            case OperatorToken operatorToken when operatorToken.getOperator() == Operator.EXPONENT -> NumericExpressionNode.BinaryOperator.POWER;
+            default -> null;
+        };
+        if (binaryOperator == null) {
+            return lhs;
+        }
+        context.poll();
+        return new NumericExpressionNode.BinaryNumericOperation(binaryOperator, lhs, this.parseNumericFactor(context));
     }
 
 }

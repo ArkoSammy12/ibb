@@ -18,9 +18,9 @@ public sealed interface NumericExpressionNode extends ExpressionNode {
 
     record SgnFunctionNode(ExpressionNode argumentExpression) implements NumericExpressionNode {}
 
-    record UnaryNumericExpression(UnaryOperator unaryOperator, ExpressionNode argumentExpression) implements NumericExpressionNode {}
+    record UnaryNumericExpression(UnaryOperator unaryOperator, ExpressionNode expressionNode) implements NumericExpressionNode {}
 
-    record BinaryNumericExpression(BinaryOperator binaryOperator, ExpressionNode lhs, ExpressionNode rhs) implements NumericExpressionNode {}
+    record BinaryNumericOperation(BinaryOperator binaryOperator, ExpressionNode lhs, ExpressionNode rhs) implements NumericExpressionNode {}
 
     enum BinaryOperator {
         ADD,

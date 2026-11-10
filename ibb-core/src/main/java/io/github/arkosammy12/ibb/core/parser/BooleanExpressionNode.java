@@ -2,15 +2,15 @@ package io.github.arkosammy12.ibb.core.parser;
 
 public sealed interface BooleanExpressionNode extends ExpressionNode {
 
-    record RelationalOperationNode(UnaryOperator unaryOperator, RelationalOperation relationalOperation, NumericExpressionNode lhs, NumericExpressionNode rhs) implements BooleanExpressionNode {}
+    record RelationalOperationNode(RelationalOperation relationalOperation, ExpressionNode lhs, ExpressionNode rhs) implements BooleanExpressionNode {}
 
-    record UnaryBooleanExpression(UnaryOperator unaryOperator, BooleanExpressionNode booleanExpressionNode) implements BooleanExpressionNode {}
+    record UnaryBooleanExpression(UnaryOperator unaryOperator, ExpressionNode expressionNode) implements BooleanExpressionNode {}
 
-    record BinaryBooleanOperation(BinaryOperator binaryOperator, BooleanExpressionNode lhs, BooleanExpressionNode rhs) implements BooleanExpressionNode {}
+    record BinaryBooleanOperation(BinaryOperator binaryOperator, ExpressionNode lhs, ExpressionNode rhs) implements BooleanExpressionNode {}
 
     enum UnaryOperator {
         NONE,
-        NOT
+        NOT,
     }
 
     enum BinaryOperator {

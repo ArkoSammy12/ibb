@@ -264,28 +264,24 @@ public final class TinyBasicInterpreter {
 
     private boolean evaluateBooleanExpression(int lineNumber, int currentStatementIndex, BooleanExpressionNode booleanExpressionNode) throws TinyBasicInterpreterException {
         return switch (booleanExpressionNode) {
-            case BooleanExpressionNode.UnaryBooleanExpression(BooleanExpressionNode.UnaryOperator unaryOperator, BooleanExpressionNode expressionNode) -> switch (unaryOperator) {
-                case NONE -> this.evaluateBooleanExpression(lineNumber, currentStatementIndex, expressionNode);
-                case NOT -> !this.evaluateBooleanExpression(lineNumber, currentStatementIndex, expressionNode);
+            case BooleanExpressionNode.UnaryBooleanExpression(BooleanExpressionNode.UnaryOperator unaryOperator, ExpressionNode expressionNode) -> switch (unaryOperator) {
+                case NONE -> this.evaluateExpressionToBooleanValue(lineNumber, currentStatementIndex, expressionNode);
+                case NOT -> !this.evaluateExpressionToBooleanValue(lineNumber, currentStatementIndex, expressionNode);
             };
-            case BooleanExpressionNode.BinaryBooleanOperation(BooleanExpressionNode.BinaryOperator binaryOperator, BooleanExpressionNode lhs, BooleanExpressionNode rhs) -> switch (binaryOperator) {
-                case OR -> this.evaluateBooleanExpression(lineNumber, currentStatementIndex, lhs) || this.evaluateBooleanExpression(lineNumber, currentStatementIndex, rhs);
-                case AND -> this.evaluateBooleanExpression(lineNumber, currentStatementIndex, lhs) && this.evaluateBooleanExpression(lineNumber, currentStatementIndex, rhs);
+            case BooleanExpressionNode.BinaryBooleanOperation(BooleanExpressionNode.BinaryOperator binaryOperator, ExpressionNode lhs, ExpressionNode rhs) -> switch (binaryOperator) {
+                case OR -> this.evaluateExpressionToBooleanValue(lineNumber, currentStatementIndex, lhs) || this.evaluateExpressionToBooleanValue(lineNumber, currentStatementIndex, rhs);
+                case AND -> this.evaluateExpressionToBooleanValue(lineNumber, currentStatementIndex, lhs) && this.evaluateExpressionToBooleanValue(lineNumber, currentStatementIndex, rhs);
             };
-            case BooleanExpressionNode.RelationalOperationNode(BooleanExpressionNode.UnaryOperator unaryOperator, BooleanExpressionNode.RelationalOperation relationalOperation, NumericExpressionNode lhs, NumericExpressionNode rhs) -> {
-                short lhsValue = this.evaluateNumericExpression(lineNumber, currentStatementIndex, lhs);
-                short rhsValue = this.evaluateNumericExpression(lineNumber, currentStatementIndex, rhs);
-                boolean value = switch (relationalOperation) {
+            case BooleanExpressionNode.RelationalOperationNode(BooleanExpressionNode.RelationalOperation relationalOperation, ExpressionNode lhs, ExpressionNode rhs) -> {
+                short lhsValue = this.evaluateExpressionToNumericValue(lineNumber, currentStatementIndex, lhs);
+                short rhsValue = this.evaluateExpressionToNumericValue(lineNumber, currentStatementIndex, rhs);
+                yield switch (relationalOperation) {
                     case LESS_THAN -> lhsValue < rhsValue;
                     case LESS_THAN_OR_EQUALS -> lhsValue <= rhsValue;
                     case GREATER_THAN -> lhsValue > rhsValue;
                     case GREATER_THAN_OR_EQUALS -> lhsValue >= rhsValue;
                     case EQUALS -> lhsValue == rhsValue;
                     case NOT_EQUALS -> lhsValue != rhsValue;
-                };
-                yield switch (unaryOperator) {
-                    case NONE -> value;
-                    case NOT -> !value;
                 };
             }
         };
@@ -300,14 +296,14 @@ public final class TinyBasicInterpreter {
             case NumericExpressionNode.AbsFunctionNode absFunctionNode -> Math.abs(this.evaluateExpressionToNumericValue(lineNumber, currentStatementIndex, absFunctionNode.argumentExpression()));
             case NumericExpressionNode.RndFunctionNode rndFunctionNode -> this.getRandom(lineNumber, currentStatementIndex, this.evaluateExpressionToNumericValue(lineNumber, currentStatementIndex, rndFunctionNode.argumentExpression()));
             case NumericExpressionNode.UnaryNumericExpression subExpressionNode -> switch (subExpressionNode.unaryOperator()) {
-                case NONE, PLUS -> this.evaluateExpressionToNumericValue(lineNumber, currentStatementIndex, subExpressionNode.argumentExpression());
-                case MINUS -> -this.evaluateExpressionToNumericValue(lineNumber, currentStatementIndex, subExpressionNode.argumentExpression());
+                case NONE, PLUS -> this.evaluateExpressionToNumericValue(lineNumber, currentStatementIndex, subExpressionNode.expressionNode());
+                case MINUS -> -this.evaluateExpressionToNumericValue(lineNumber, currentStatementIndex, subExpressionNode.expressionNode());
             };
             case NumericExpressionNode.SgnFunctionNode sgnFunctionNode -> {
                 short val = this.evaluateExpressionToNumericValue(lineNumber, currentStatementIndex, sgnFunctionNode.argumentExpression());
                 yield val > 0 ? 1 : (val < 0 ? -1 : 0);
             }
-            case NumericExpressionNode.BinaryNumericExpression binaryOperationExpressionNode -> {
+            case NumericExpressionNode.BinaryNumericOperation binaryOperationExpressionNode -> {
                 short lhs = this.evaluateExpressionToNumericValue(lineNumber, currentStatementIndex, binaryOperationExpressionNode.lhs());
                 short rhs = this.evaluateExpressionToNumericValue(lineNumber, currentStatementIndex, binaryOperationExpressionNode.rhs());
                 yield (short) switch (binaryOperationExpressionNode.binaryOperator()) {
@@ -319,7 +315,7 @@ public final class TinyBasicInterpreter {
                         if (rhs == 0) {
                             throw new TinyBasicDivisionByZeroException(normalizeLineNumber(lineNumber), currentStatementIndex, lhs);
                         } else {
-                            yield lhs / rhs;
+                            yield (double) lhs / rhs;
                         }
                     }
                     case MODULO -> {
