@@ -83,15 +83,10 @@ public final class TinyBasicParser {
                 }
                 case IF -> {
                     ExpressionNode conditionalExpressionNode = this.parseExpression(context);
-                    yield switch (context.poll()) {
-                        case KeywordToken ifKeyword -> switch (ifKeyword.getKeyword()) {
-                            case THEN -> new StatementNode.If(conditionalExpressionNode, this.parseStatement(context));
-                            case GOTO -> new StatementNode.If(conditionalExpressionNode, new StatementNode.Goto(this.parseExpression(context)));
-                            case GOSUB -> new StatementNode.If(conditionalExpressionNode, new StatementNode.GoSub(this.parseExpression(context)));
-                            default -> throw new TinyBasicParseException("Expected 'then', 'goto' or 'gosub' to begin 'if' statement body!", ifKeyword.getSourcePosition());
-                        };
-                        case Token token -> throw new TinyBasicParseException("Expected 'then', 'goto' or 'gosub' to begin 'if' statement body!", token.getSourcePosition());
-                    };
+                    if (context.peek() instanceof KeywordToken ifKeyword && ifKeyword.getKeyword() == Keyword.THEN) {
+                        context.poll();
+                    }
+                    yield new StatementNode.If(conditionalExpressionNode, this.parseStatement(context));
                 }
                 case FOR -> {
                     Variable loopVariable = this.parseVariable(context);
