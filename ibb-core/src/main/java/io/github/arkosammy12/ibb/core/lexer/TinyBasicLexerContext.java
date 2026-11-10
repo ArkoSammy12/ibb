@@ -46,8 +46,8 @@ final class TinyBasicLexerContext {
     }
 
     SourceStream<Token> getTokenStream() {
-        SourcePosition lastPosition = this.tokens.stream().reduce((_, second) -> second).map(Token::getSourcePosition).orElseGet(() -> new SourcePosition(0));
-        return new SourceStream<>(this.tokens, new EndOfLineToken(new SourcePosition(lastPosition.column() + 1)));
+        SourcePosition endOfLinePosition = this.tokens.stream().reduce((_, second) -> second).map(token -> new SourcePosition(Math.addExact(token.getSourcePosition().column(), token.getLexeme().length()))).orElseGet(() -> new SourcePosition(0));
+        return new SourceStream<>(this.tokens, new EndOfLineToken(endOfLinePosition));
     }
 
 }
