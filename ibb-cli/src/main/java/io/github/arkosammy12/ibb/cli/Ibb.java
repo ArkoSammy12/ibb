@@ -160,7 +160,7 @@ public final class Ibb implements TinyBasicInterpreterHost {
                 String line = lines.get(i);
                 switch (parseTinyBasic(line, () -> this.lexer, () -> this.parser)) {
                     case ParseResult.Error<?, ?> error -> {
-                        this.handleEvalParseError(error.error(), i);
+                        this.handleEvalParseError(line, i, error.error());
                         return;
                     }
                     case ParseResult.Ok<? extends TinyBasicParseValue, ?> ok -> {
@@ -195,7 +195,7 @@ public final class Ibb implements TinyBasicInterpreterHost {
 
     private void handleEvaluate(String input) throws TinyBasicInterpreterException {
         switch (parseTinyBasic(input, () -> this.lexer, () -> this.parser)) {
-            case ParseResult.Error<?, ?> error -> this.handleEvalParseError(error.error(), -1);
+            case ParseResult.Error<?, ?> error -> this.handleEvalParseError(input, -1, error.error());
             case ParseResult.Ok<? extends TinyBasicParseValue, ?> ok -> {
                 LineNode lineNode = ok.value().lineNode();
                 if (lineNode.getLineNumber().isPresent()) {
@@ -208,16 +208,34 @@ public final class Ibb implements TinyBasicInterpreterHost {
         }
     }
 
-    private void handleEvalParseError(ParseError parseError, int row) {
-        Optional<SourcePosition> sourcePosition = parseError.getSourcePosition();
+    private void handleEvalParseError(String line, int row, ParseError parseError) {
+        Optional<SourcePosition> optionalSourcePosition = parseError.getSourcePosition();
         String message = parseError.getMessage();
-        if (sourcePosition.isEmpty()) {
+        if (optionalSourcePosition.isEmpty()) {
             IO.println("Syntax error: %s".formatted(message));
-        } else if (row >= 0) {
-            IO.println("Syntax error in row '%d', column '%d': %s".formatted(row + 1, sourcePosition.get().column() + 1, message));
-        } else {
-            IO.println("Syntax error in column '%d': %s".formatted(sourcePosition.get().column() + 1, message));
+            return;
         }
+        SourcePosition sourcePosition = optionalSourcePosition.get();
+
+        int column = sourcePosition.column();
+        String rowString = "";
+        String header;
+        if (row >= 0) {
+            rowString = String.valueOf(row + 1);
+            header = "Syntax error in row %d, column %d!".formatted(row + 1, column + 1);
+        } else {
+            header = "Syntax error in column %d".formatted(column + 1);
+        }
+
+        String rowStringPadding = " ".repeat(rowString.length());
+        String footer = " ".repeat(column) + "^ " + message;
+
+        IO.println("""
+                %s
+                %s |
+                %s | %s
+                %s | %s
+                """.formatted(header, rowStringPadding, rowString, line, rowStringPadding, footer));
     }
 
     private void handleInterpreterException(TinyBasicInterpreterException e) {
@@ -239,9 +257,9 @@ public final class Ibb implements TinyBasicInterpreterHost {
         };
         OptionalInt lineNumber = e.getLineNumber();
         if (lineNumber.isEmpty()) {
-            IO.println("Error on immediate mode line on statement '%d': %s".formatted(e.getStatementIndex(), message));
+            IO.println("Error on immediate mode line on statement %d: %s".formatted(e.getStatementIndex(), message));
         } else {
-            IO.println("Error on line '%d', statement '%d': %s".formatted(lineNumber.getAsInt(), e.getStatementIndex(), message));
+            IO.println("Error on line %d, statement %d: %s".formatted(lineNumber.getAsInt(), e.getStatementIndex(), message));
         }
     }
 
