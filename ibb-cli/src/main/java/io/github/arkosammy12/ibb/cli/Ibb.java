@@ -221,10 +221,10 @@ public final class Ibb implements TinyBasicInterpreterHost {
         String rowString = "";
         String header;
         if (row >= 0) {
-            rowString = String.valueOf(row + 1);
-            header = "Syntax error in row %d, column %d!".formatted(row + 1, column + 1);
+            rowString = String.valueOf(Math.addExact(row, 1));
+            header = "Syntax error in row %d, column %d!".formatted(Math.addExact(row, 1), Math.addExact(column, 1));
         } else {
-            header = "Syntax error in column %d".formatted(column + 1);
+            header = "Syntax error in column %d!".formatted(Math.addExact(column, 1));
         }
 
         String rowStringPadding = " ".repeat(rowString.length());
@@ -240,27 +240,30 @@ public final class Ibb implements TinyBasicInterpreterHost {
 
     private void handleInterpreterException(TinyBasicInterpreterException e) {
         String message = switch (e) {
-            case TinyBasicArrayIndexOutOfBoundsException arrayIndexOutOfBoundsExceptions -> "The array index '%d' is out of bounds!".formatted(arrayIndexOutOfBoundsExceptions.getIndex());
-            case TinyBasicDivisionByZeroException divisionByZeroException -> "Tried dividing '%d' by zero!".formatted(divisionByZeroException.getDividend());
-            case TinyBasicRndArgumentBelowOneException rndArgumentBelowOneException -> "The RND() argument '%d' cannot be below one!".formatted(rndArgumentBelowOneException.getArgument());
-            case TinyBasicReturnWithoutGoSubException _ -> "Encountered 'return' without 'gosub'!";
-            case TinyBasicNextWithoutForException nextWithoutForException -> "Encountered a 'next' with variable '%s' without a matching 'for' statement!".formatted(nextWithoutForException.getVariable().getPattern());
+            case TinyBasicArrayIndexOutOfBoundsException arrayIndexOutOfBoundsExceptions -> "The array index '%d' is out of bounds".formatted(arrayIndexOutOfBoundsExceptions.getIndex());
+            case TinyBasicDivisionByZeroException divisionByZeroException -> "Tried dividing '%d' by zero".formatted(divisionByZeroException.getDividend());
+            case TinyBasicRndArgumentBelowOneException rndArgumentBelowOneException -> "The RND() argument '%d' cannot be below one".formatted(rndArgumentBelowOneException.getArgument());
+            case TinyBasicReturnWithoutGoSubException _ -> "Encountered 'return' without 'gosub'";
+            case TinyBasicNextWithoutForException nextWithoutForException -> "Encountered a 'next' with variable '%s' without a matching 'for' statement".formatted(nextWithoutForException.getVariable().getPattern());
             case TinyBasicNegativeTargetException negativeTargetException -> switch (negativeTargetException.getJumpType()) {
-                case GOTO -> "The 'goto' line number target '%d' is negative!".formatted(negativeTargetException.getTargetLineNumber());
-                case GOSUB -> "The 'gosub' line number target '%d' is negative!".formatted(negativeTargetException.getTargetLineNumber());
+                case GOTO -> "The 'goto' line number target '%d' is negative".formatted(negativeTargetException.getTargetLineNumber());
+                case GOSUB -> "The 'gosub' line number target '%d' is negative".formatted(negativeTargetException.getTargetLineNumber());
             };
             case TinyBasicUndefinedTargetException undefinedTargetException -> switch (undefinedTargetException.getJumpType()) {
-                case GOTO -> "The 'goto' line number target '%d' is undefined!".formatted(undefinedTargetException.getTargetLineNumber());
-                case GOSUB -> "The 'gosub' line number target '%d' is undefined!".formatted(undefinedTargetException.getTargetLineNumber());
+                case GOTO -> "The 'goto' line number target '%d' is undefined".formatted(undefinedTargetException.getTargetLineNumber());
+                case GOSUB -> "The 'gosub' line number target '%d' is undefined".formatted(undefinedTargetException.getTargetLineNumber());
             };
-            case TinyBasicPrintZoneWidthBelowOneException tinyBasicPrintZoneWidthBelowOneException -> "The print zone width '%d' cannot be less than 1!".formatted(tinyBasicPrintZoneWidthBelowOneException.getPrintZoneWidth());
+            case TinyBasicPrintZoneWidthBelowOneException tinyBasicPrintZoneWidthBelowOneException -> "The print zone width '%d' cannot be less than 1".formatted(tinyBasicPrintZoneWidthBelowOneException.getPrintZoneWidth());
         };
+        String lineText = "immediate mode line";
         OptionalInt lineNumber = e.getLineNumber();
-        if (lineNumber.isEmpty()) {
-            IO.println("Error on immediate mode line on statement %d: %s".formatted(e.getStatementIndex(), message));
-        } else {
-            IO.println("Error on line %d, statement %d: %s".formatted(lineNumber.getAsInt(), e.getStatementIndex(), message));
+        if (lineNumber.isPresent()) {
+            lineText = "line %d".formatted(lineNumber.getAsInt());
         }
+        IO.println("""
+                Runtime Error: %s!
+                    at %s, statement %d
+                """.formatted(message, lineText, Math.addExact(e.getStatementIndex(), 1)));
     }
 
     @Override

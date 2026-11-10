@@ -7,7 +7,6 @@ import io.github.arkosammy12.ibb.core.util.SourceCharacter;
 import io.github.arkosammy12.ibb.core.util.SourcePosition;
 import io.github.arkosammy12.ibb.core.util.SourceStream;
 
-import java.util.Collection;
 import java.util.Optional;
 import java.util.Stack;
 
@@ -53,7 +52,7 @@ public final class TinyBasicLexer {
                 if (isWhitespace(sourceCharacter.character())) {
                     continue;
                 }
-                return new ParseResult.Error<>(new TinyBasicLexError("Unknown token '%s'!".formatted(sourceCharacter.character()), sourceCharacter.sourcePosition()));
+                return new ParseResult.Error<>(new TinyBasicLexError("Unknown token '%s'".formatted(sourceCharacter.character()), sourceCharacter.sourcePosition()));
             }
             return new ParseResult.Ok<>(new TinyBasicLexValue(context.getTokenStream()));
         } catch (TinyBasicParseException tinyBasicParseException) {
@@ -118,7 +117,7 @@ public final class TinyBasicLexer {
                 return new StringToken(leftDoubleQuoteCharacter.sourcePosition(), sb.toString());
             }
         }
-         throw new TinyBasicParseException("Unclosed string literal '%s'!".formatted(sb.toString()), leftDoubleQuoteCharacter.sourcePosition());
+         throw new TinyBasicParseException("Unclosed string literal '%s'".formatted(sb.toString()), leftDoubleQuoteCharacter.sourcePosition());
     }
 
     private NumberToken lexNumber(TinyBasicLexerContext context, SourceCharacter numberCharacter) {
