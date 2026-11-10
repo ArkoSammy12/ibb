@@ -326,9 +326,9 @@ public final class TinyBasicParser {
                 case ABS -> new NumericExpressionNode.AbsFunctionNode(this.parseParenthesizedExpression(context, "ABS() expression argument"));
                 case RND -> new NumericExpressionNode.RndFunctionNode(this.parseParenthesizedExpression(context, "RND() expression argument"));
                 case SGN -> new NumericExpressionNode.SgnFunctionNode(this.parseParenthesizedExpression(context, "SGN() expression argument"));
-                default -> throw new TinyBasicParseException("Expected variable, number, array reference, function or expression enclosing in parenthesis, found '%s'!".formatted(keywordToken.getLexeme()), keywordToken.getSourcePosition());
+                default -> throw new TinyBasicParseException("Expected variable, number, array reference, function or expression, found '%s'!".formatted(keywordToken.getLexeme()), keywordToken.getSourcePosition());
             };
-            case Token token -> throw new TinyBasicParseException("Expected variable, number, array reference, function or expression enclosing in parenthesis, found '%s'!".formatted(token.getLexeme()), token.getSourcePosition());
+            case Token token -> throw new TinyBasicParseException("Expected variable, number, array reference, function or expression, found '%s'!".formatted(token.getLexeme()), token.getSourcePosition());
         };
         return switch (context.peek()) {
             case OperatorToken operatorToken when operatorToken.getOperator() == Operator.EXPONENT -> {
