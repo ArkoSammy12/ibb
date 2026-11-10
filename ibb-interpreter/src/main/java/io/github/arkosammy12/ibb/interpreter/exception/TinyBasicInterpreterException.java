@@ -2,7 +2,7 @@ package io.github.arkosammy12.ibb.interpreter.exception;
 
 import java.util.OptionalInt;
 
-public abstract sealed class TinyBasicInterpreterException extends Exception permits TinyBasicArrayIndexOutOfBoundsException, TinyBasicDivisionByZeroException, TinyBasicNegativeTargetException, TinyBasicNextWithoutForException, TinyBasicReturnWithoutGoSubException, TinyBasicRndArgumentBelowOneException, TinyBasicUndefinedTargetException {
+public abstract sealed class TinyBasicInterpreterException extends Exception permits TinyBasicArrayIndexOutOfBoundsException, TinyBasicDivisionByZeroException, TinyBasicNegativeTargetException, TinyBasicNextWithoutForException, TinyBasicPrintZoneWidthBelowOneException, TinyBasicReturnWithoutGoSubException, TinyBasicRndArgumentBelowOneException, TinyBasicUndefinedTargetException {
 
     private final Integer lineNumber;
     private final int statementIndex;

@@ -5,7 +5,8 @@ public enum Delimiter implements Lexeme {
     RIGHT_PARENTHESIS(")"),
     COMMA(","),
     COLON(":"),
-    SEMICOLON(";");
+    SEMICOLON(";"),
+    HASH("#");
 
     private final String pattern;
 

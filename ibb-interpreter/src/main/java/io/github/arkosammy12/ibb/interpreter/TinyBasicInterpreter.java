@@ -13,7 +13,7 @@ public final class TinyBasicInterpreter {
     private static final String DEFAULT_INPUT_PROMPT_TEXT = "? ";
 
     private final TinyBasicInterpreterHost host;
-    private final int printZoneWidth;
+    private final int configuredPrintZoneWidth;
 
     private final TinyBasicLineList lines = new TinyBasicLineList();
     private final short[] variables = new short[Variable.values().length];
@@ -25,6 +25,7 @@ public final class TinyBasicInterpreter {
     private int lineIndex = 0;
     private int statementIndex = 0;
     private int currentTerminalColumn = 0;
+    private int currentPrintZoneWidth;
     private boolean running = false;
 
     public TinyBasicInterpreter(TinyBasicInterpreterHost host, int printZoneWidth) {
@@ -32,7 +33,8 @@ public final class TinyBasicInterpreter {
             throw new IllegalArgumentException("The provided print zone width '%d' cannot be less than 1!".formatted(printZoneWidth));
         }
         this.host = host;
-        this.printZoneWidth = printZoneWidth;
+        this.configuredPrintZoneWidth = printZoneWidth;
+        this.resetCurrentPrintZoneWidth();
     }
 
     public void removeLine(int lineNumber) {
@@ -53,6 +55,7 @@ public final class TinyBasicInterpreter {
         this.gosubStack.clear();
         Arrays.fill(this.loopFrames, null);
         this.currentTerminalColumn = 0;
+        this.resetCurrentPrintZoneWidth();
     }
 
     public Collection<String> list() {
@@ -79,6 +82,10 @@ public final class TinyBasicInterpreter {
         } finally {
             this.lines.removeLine(-1);
         }
+    }
+
+    private void resetCurrentPrintZoneWidth() {
+        this.currentPrintZoneWidth = this.configuredPrintZoneWidth;
     }
 
     private void execute() throws TinyBasicInterpreterException {
@@ -191,6 +198,7 @@ public final class TinyBasicInterpreter {
                     this.printElement(lineNumber, currentStatementIndex, printElement, sb);
                 }
                 this.host.print(sb.toString());
+                this.resetCurrentPrintZoneWidth();
             }
             case StatementNode.Input inputStatement -> {
                 String prompt = inputStatement.getPrompt().orElse(DEFAULT_INPUT_PROMPT_TEXT);
@@ -215,6 +223,14 @@ public final class TinyBasicInterpreter {
     private void printElement(int lineNumber, int currentStatementIndex, StatementNode.Print.Element printElement, StringBuilder sb) throws TinyBasicInterpreterException {
         String printed = switch (printElement.expressionListNode()) {
             case StringNode(String contents) -> contents;
+            case ExpressionListNode.PrintZoneModifier(ExpressionNode expressionNode) -> {
+                short newPrintZoneWidth = this.evaluateExpressionToNumericValue(lineNumber, currentStatementIndex, expressionNode);
+                if (newPrintZoneWidth < 1) {
+                    throw new TinyBasicPrintZoneWidthBelowOneException(normalizeLineNumber(lineNumber), currentStatementIndex, newPrintZoneWidth);
+                }
+                this.currentPrintZoneWidth = newPrintZoneWidth;
+                yield "";
+            }
             case ExpressionNode expressionNode -> String.valueOf(this.evaluateExpressionToNumericValue(lineNumber, currentStatementIndex, expressionNode));
         };
         this.incrementTerminalColumn(printed.length());
@@ -226,7 +242,7 @@ public final class TinyBasicInterpreter {
                 this.currentTerminalColumn = 0;
             }
             case COMMA -> {
-                int extraSpaces = this.printZoneWidth - (this.currentTerminalColumn % this.printZoneWidth);
+                int extraSpaces = this.currentPrintZoneWidth - (this.currentTerminalColumn % this.currentPrintZoneWidth);
                 sb.repeat(" ", Math.max(0, extraSpaces));
                 this.incrementTerminalColumn(extraSpaces);
             }

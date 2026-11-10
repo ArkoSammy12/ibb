@@ -235,6 +235,7 @@ public final class Ibb implements TinyBasicInterpreterHost {
                 case GOTO -> "The 'goto' line number target '%d' is undefined!".formatted(undefinedTargetException.getTargetLineNumber());
                 case GOSUB -> "The 'gosub' line number target '%d' is undefined!".formatted(undefinedTargetException.getTargetLineNumber());
             };
+            case TinyBasicPrintZoneWidthBelowOneException tinyBasicPrintZoneWidthBelowOneException -> "The print zone width '%d' cannot be less than 1!".formatted(tinyBasicPrintZoneWidthBelowOneException.getPrintZoneWidth());
         };
         OptionalInt lineNumber = e.getLineNumber();
         if (lineNumber.isEmpty()) {
@@ -336,7 +337,7 @@ public final class Ibb implements TinyBasicInterpreterHost {
               if <expr> then <statement>
               for <var> = <expr> to <expr>
               next <var>
-              print [expr|string] [(,|;) <expr|string>]*[;|,]
+              print [expr|string|#expr] [(,|;) <expr|string|#expr>]*[;|,]
               input [string] <var> [, <var>]*
               rem <text> or '<text>
               end

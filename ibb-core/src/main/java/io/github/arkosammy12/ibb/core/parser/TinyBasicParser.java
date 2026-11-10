@@ -138,6 +138,10 @@ public final class TinyBasicParser {
                 context.poll();
                 yield new StringNode(stringToken.getContents());
             }
+            case DelimiterToken delimiterToken when delimiterToken.getDelimiter() == Delimiter.HASH -> {
+                context.poll();
+                yield new ExpressionListNode.PrintZoneModifier(this.parseExpression(context));
+            }
             default -> this.parseExpression(context);
         };
         StatementNode.Print.FormattingDelimiter formattingDelimiter = switch (context.peek()) {
