@@ -8,7 +8,26 @@ A Tiny BASIC interpreter written in Java.
 
 A Java Runtime Environment (JRE) or Development Kit (JDK) is required to run *ibb*. 
 
-You can run *ibb* with `java -jar ibb-x.y.z.jar`.
+You can run *ibb* with `java -jar ibb-x.y.z.jar <args>`.
+
+### CLI
+
+You can pass optional arguments to the interpreter instructing it to run a Tiny BASIC file directly, or to just change some settings:
+
+```
+Usage: ibb [-hV] [-p=<printZoneWidth>] [<scriptPath>]
+Enter the interactive REPL or execute the given Tiny BASIC script
+      [<scriptPath>]   The path of the Tiny BASIC script to execute, if provided
+  -h, --help           Show this help message and exit.
+  -p, --print-zone-width=<printZoneWidth>
+                       Specify the default print zone width. Default is 14
+  -V, --version        Print version information and exit.
+```
+
+### REPL
+
+If no script path is passed to the interpreter, it will enter into REPL (read-eval print loop) mode, where you can interactively
+enter commands to interact with the interpreter, run lines of code directly, or build the script from the terminal line by line.
 
 ```
 Commands:
