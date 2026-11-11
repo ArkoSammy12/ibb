@@ -30,7 +30,7 @@ public final class Ibb implements TinyBasicInterpreterHost {
 
     private static final String PROMPT = MavenProperties.ARTIFACT_ID + "> ";
 
-    private final TinyBasicInterpreter interpreter = new TinyBasicInterpreter(this, 11);
+    private final TinyBasicInterpreter interpreter;
     private final TinyBasicLexer lexer = new TinyBasicLexer();
     private final TinyBasicParser parser = new TinyBasicParser();
 
@@ -38,20 +38,31 @@ public final class Ibb implements TinyBasicInterpreterHost {
     private volatile boolean interpreterRunning = false;
     private volatile boolean exitInterpreter = false;
 
-    public Ibb() {
-        Signal.handle(new Signal("INT"), _ -> {
-            if (this.interpreterRunning) {
-                this.exitInterpreter = true;
-            } else {
-                this.running = false;
-                System.exit(0);
-            }        
-        });
+    public Ibb(int printZoneWidth) {
+        if (printZoneWidth < 1) {
+            throw new IllegalArgumentException("The provided print zone width '%d' cannot be less than 1!".formatted(printZoneWidth));
+        }
+        this.interpreter = new TinyBasicInterpreter(this, printZoneWidth);
     }
 
-    public void start() {
-        this.running = true;
+    public void runScript(Path scriptPath) {
+        if (!Files.exists(scriptPath)) {
+            throw new IllegalArgumentException("The provided script path '%s' does not exist!".formatted(scriptPath.toString()));
+        }
+        if (this.loadScript(scriptPath)) {
+            try {
+                this.handleRun();
+            } catch (TinyBasicInterpreterException e) {
+                this.handleInterpreterException(e);
+            }
+        }
+    }
+
+    public void startRepl() {
+        this.registerSignalHandlers();
         printHelpMessage();
+
+        this.running = true;
         while (this.running) {
             String input = IO.readln(PROMPT);
             if (input == null) {
@@ -144,30 +155,34 @@ public final class Ibb implements TinyBasicInterpreterHost {
             return;
         }
         Path path = optionalPath.get();
-
         if (!Files.exists(path)) {
             IO.println("The provided 'load' argument path '%s' does not exist!".formatted(path.toString()));
             return;
         }
+
+        this.loadScript(path);
+    }
+
+    private boolean loadScript(Path path) {
         try {
             List<String> lines = Files.readAllLines(path);
             Collection<InsertedLine> readLines = new ArrayList<>();
             if (lines.isEmpty()) {
-                IO.println("Cannot 'load' from file '%s' because the file is empty!".formatted(path.toString()));
-                return;
+                IO.println("Cannot load from file '%s' because the file is empty!".formatted(path.toString()));
+                return false;
             }
             for (int i = 0; i < lines.size(); i++) {
                 String line = lines.get(i);
                 switch (parseTinyBasic(line, () -> this.lexer, () -> this.parser)) {
                     case ParseResult.Error<?, ?> error -> {
                         this.handleEvalParseError(line, i, error.error());
-                        return;
+                        return false;
                     }
                     case ParseResult.Ok<? extends TinyBasicParseValue, ?> ok -> {
                         LineNode lineNode = ok.value().lineNode();
                         if (lineNode.getLineNumber().isEmpty()) {
-                            IO.println("Cannot 'load' from file '%s' because the line in row '%s' does not have a line number!".formatted(path.toString(), i + 1));
-                            return;
+                            IO.println("Cannot load from file '%s' because the line in row %d does not have a line number!".formatted(path.toString(), Math.addExact(i, 1)));
+                            return false;
                         }
                         readLines.add(new InsertedLine(line, lineNode));
                     }
@@ -177,12 +192,15 @@ public final class Ibb implements TinyBasicInterpreterHost {
             for (InsertedLine insertedLine : readLines) {
                 this.interpreter.evaluate(insertedLine.rawLine(), insertedLine.lineNode());
             }
+            return true;
         } catch (IOException e) {
             IO.println("Failed to load from file '%s': %s".formatted(path.toString(), e.getCause()));
+            return false;
         } catch (TinyBasicInterpreterException e) {
             // Should be unreachable since we only pass LineNodes with line numbers to the evaluate() method
             IO.println("Failed to load from file '%s'!".formatted(path.toString()));
             this.handleInterpreterException(e);
+            return false;
         }
     }
 
@@ -300,6 +318,17 @@ public final class Ibb implements TinyBasicInterpreterHost {
         } else {
             return false;
         }
+    }
+
+    private void registerSignalHandlers() {
+        Signal.handle(new Signal("INT"), _ -> {
+            if (this.interpreterRunning) {
+                this.exitInterpreter = true;
+            } else {
+                this.running = false;
+                System.exit(0);
+            }
+        });
     }
 
     private static boolean allDigits(String s) {

@@ -1,5 +1,7 @@
 package io.github.arkosammy12.ibb.cli;
 
+import picocli.CommandLine;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
@@ -26,6 +28,14 @@ public final class MavenProperties {
 
     private MavenProperties() {
         throw new AssertionError();
+    }
+
+    public static final class Provider implements CommandLine.IVersionProvider {
+
+        @Override
+        public String[] getVersion() {
+            return new String[] { MavenProperties.VERSION };
+        }
     }
 
 }
