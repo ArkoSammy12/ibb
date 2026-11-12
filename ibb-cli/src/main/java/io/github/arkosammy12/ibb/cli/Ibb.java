@@ -385,10 +385,10 @@ public final class Ibb implements TinyBasicInterpreterHost {
               gosub <expr>
               return
               if <expr> [then] <statement>
-              for <var> = <expr> to <expr>
+              for <var> = <expr> to <expr> [step <expr>]
               next <var>
-              print [expr|string|#expr] [(,|;) <expr|string|#expr>]*[;|,]
-              input [string] <var> [, <var>]*
+              print [([#]<expr>|string)] {(,|;) ([#]<expr>|string)}[;|,]
+              input [string] <var> {, <var>}
               rem <text> or '<text>
               end
               
