@@ -40,34 +40,29 @@ Commands:
 - exit: Quit the Tiny BASIC interpreter and exit.
 - help: Print this help message.
 You can break out of the currently running Tiny BASIC program by pressing Ctrl+C.
-
 Statements:
 [let] <var> = <expr>
 goto <expr>
 gosub <expr>
 return
 if <expr> [then] <statement>
-for <var> = <expr> to <expr>
+for <var> = <expr> to <expr> [step <expr>]
 next <var>
-print [expr|string|#expr] [(,|;) <expr|string|#expr>]*[;|,]
-input [string] <var> [, <var>]*
+print [([#]<expr>|string)] {(,|;) ([#]<expr>|string)}[;|,]
+input [string] <var> {, <var>}
 rem <text> or '<text>
 end
-
 Operators:
 - Unary: +, -, not
 - Binary: +, -, *, /, \, mod, ^, <, <=, >, >=, =, <>, ><, and, or
-
 Variables:
 - Letters: A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z.
 - Array: @(expr)
-
 Functions:
 - SGN(expr): Returns 1 if the argument is positive, -1 if it is negative, 0 if it is 0.
 - ABS(expr): Returns the absolute value of the argument.
 - ASC(string): Returns the ASCII value of the first character of the string argument.
 - RND(expr): Returns a random value between 1 and the argument, inclusive. The argument cannot be 0 or negative.
-
 Notes:
 - Expressions may grouped with ().
 - Numeric expressions may be converted to boolean values by performing a '!= 0' comparison.
