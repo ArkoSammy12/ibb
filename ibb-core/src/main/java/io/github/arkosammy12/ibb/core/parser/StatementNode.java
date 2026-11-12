@@ -19,8 +19,6 @@ public sealed interface StatementNode {
 
     record If(ExpressionNode conditionalExpression, StatementNode statement) implements StatementNode {}
 
-    record For(Variable loopVariable, ExpressionNode startValueExpression, ExpressionNode endValueExpression) implements StatementNode {}
-
     record Next(Variable loopVariable) implements StatementNode {}
 
     record Rem() implements StatementNode {}
@@ -72,6 +70,38 @@ public sealed interface StatementNode {
         @Override
         public String toString() {
             return "Input[prompt=%s, firstAssignmentTargetNode=%s, extraAssignmentTargetNodes=[%s]]".formatted(this.prompt == null ? "" : this.prompt, this.firstAssignmentTargetNode.toString(), this.extraAssignmentTargetNodes.stream().map(AssignmentTargetNode::toString).collect(Collectors.joining(", ")));
+        }
+
+    }
+
+    final class For implements StatementNode {
+
+        private final Variable loopVariable;
+        private final ExpressionNode startValueExpression;
+        private final ExpressionNode endValueExpression;
+        private final ExpressionNode stepValueExpression;
+
+        public For(Variable loopVariable, ExpressionNode startValueExpression, ExpressionNode endValueExpression, ExpressionNode stepValueExpression) {
+            this.loopVariable = loopVariable;
+            this.startValueExpression = startValueExpression;
+            this.endValueExpression = endValueExpression;
+            this.stepValueExpression = stepValueExpression;
+        }
+
+        public Variable getLoopVariable() {
+            return this.loopVariable;
+        }
+
+        public ExpressionNode getStartValueExpression() {
+            return this.startValueExpression;
+        }
+
+        public ExpressionNode getEndValueExpression() {
+            return this.endValueExpression;
+        }
+
+        public Optional<ExpressionNode> getStepValueExpression() {
+            return Optional.ofNullable(this.stepValueExpression);
         }
 
     }

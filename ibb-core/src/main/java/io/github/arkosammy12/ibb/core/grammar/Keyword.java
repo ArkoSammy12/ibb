@@ -6,6 +6,7 @@ public enum Keyword implements Lexeme {
     THEN("then"),
     FOR("for"),
     TO("to"),
+    STEP("step"),
     NEXT("next"),
     GOTO("goto"),
     INPUT("input"),

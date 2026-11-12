@@ -94,7 +94,12 @@ public final class TinyBasicParser {
                     ExpressionNode startValueExpression = this.parseExpression(context);
                     this.expect(context, toToken -> toToken instanceof KeywordToken toKeywordToken && toKeywordToken.getKeyword() == Keyword.TO, "range separator 'to'");
                     ExpressionNode endValueExpression = this.parseExpression(context);
-                    yield new StatementNode.For(loopVariable, startValueExpression, endValueExpression);
+                    ExpressionNode stepValueExpression = null;
+                    if (context.peek() instanceof KeywordToken stepKeyword && stepKeyword.getKeyword() == Keyword.STEP) {
+                        context.poll();
+                        stepValueExpression = this.parseExpression(context);
+                    }
+                    yield new StatementNode.For(loopVariable, startValueExpression, endValueExpression, stepValueExpression);
                 }
                 default -> throw new TinyBasicParseException("Illegal start of statement '%s'".formatted(keywordToken.getLexeme()), keywordToken.getSourcePosition());
             };

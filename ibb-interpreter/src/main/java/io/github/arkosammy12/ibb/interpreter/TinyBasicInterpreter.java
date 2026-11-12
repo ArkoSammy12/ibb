@@ -166,19 +166,28 @@ public final class TinyBasicInterpreter {
                     this.skipToNextLine();
                 }
             }
-            case StatementNode.For(Variable loopVariable, ExpressionNode startValueExpression, ExpressionNode endValueExpression) -> {
-                short startingValue = this.evaluateExpressionToNumericValue(lineNumber, currentStatementIndex, startValueExpression);
-                short endValue = this.evaluateExpressionToNumericValue(lineNumber, currentStatementIndex, endValueExpression);
+            case StatementNode.For forStatement -> {
+                Variable loopVariable = forStatement.getLoopVariable();
+                short startingValue = this.evaluateExpressionToNumericValue(lineNumber, currentStatementIndex, forStatement.getStartValueExpression());
+                short endValue = this.evaluateExpressionToNumericValue(lineNumber, currentStatementIndex, forStatement.getEndValueExpression());
+                short stepValue = 1;
+                Optional<ExpressionNode> stepValueExpression = forStatement.getStepValueExpression();
+                if (stepValueExpression.isPresent()) {
+                    stepValue = this.evaluateExpressionToNumericValue(lineNumber, currentStatementIndex, stepValueExpression.get());
+                }
                 this.setVariable(loopVariable, startingValue);
-                this.loopFrames[loopVariable.getIndex()] = new LoopFrame(endValue, new ProgramIndex(this.getLineIndex(), this.getStatementIndex()));
+                this.loopFrames[loopVariable.getIndex()] = new LoopFrame(endValue, stepValue, new ProgramIndex(this.getLineIndex(), this.getStatementIndex()));
             }
             case StatementNode.Next(Variable loopVariable) -> {
                 LoopFrame loopFrame = this.loopFrames[loopVariable.getIndex()];
                 if (loopFrame == null) {
                     throw new TinyBasicNextWithoutForException(normalizeLineNumber(lineNumber), currentStatementIndex, loopVariable);
                 } else {
-                    this.setVariable(loopVariable, (short) (this.getVariable(loopVariable) + 1));
-                    if (this.getVariable(loopVariable) <= loopFrame.endValue()) {
+                    short stepValue = loopFrame.stepValue();
+                    this.setVariable(loopVariable, (short) (this.getVariable(loopVariable) + stepValue));
+                    short endValue = loopFrame.endValue();
+                    short variableValue = this.getVariable(loopVariable);
+                    if (stepValue >= 0 ? variableValue <= endValue : variableValue >= endValue) {
                         ProgramIndex loopStartProgramIndex = loopFrame.loopStartProgramIndex();
                         this.setLineIndex(loopStartProgramIndex.lineIndex());
                         this.setStatementIndex(loopStartProgramIndex.statementIndex());
@@ -414,7 +423,7 @@ public final class TinyBasicInterpreter {
         }
     }
 
-    private record LoopFrame(short endValue, ProgramIndex loopStartProgramIndex) {}
+    private record LoopFrame(short endValue, short stepValue, ProgramIndex loopStartProgramIndex) {}
 
     private record ProgramIndex(int lineIndex, int statementIndex) {
 
