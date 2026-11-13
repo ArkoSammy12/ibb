@@ -18,6 +18,13 @@ public enum Keyword implements Lexeme {
     ASC("asc"),
     RND("rnd"),
     SGN("sgn"),
+    BIT_NOT("bitnot"),
+    BIT_AND("bitand"),
+    BIT_OR("bitor"),
+    BIT_XOR("bitxor"),
+    SHL("shl"),
+    SHR("shr"),
+    SAR("sar"),
     REM("rem");
 
     private final String pattern;

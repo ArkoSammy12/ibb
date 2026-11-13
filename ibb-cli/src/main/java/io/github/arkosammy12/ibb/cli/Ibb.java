@@ -405,6 +405,13 @@ public final class Ibb implements TinyBasicInterpreterHost {
               - ABS(expr): Returns the absolute value of the argument.
               - ASC(string): Returns the ASCII value of the first character of the string argument.
               - RND(expr): Returns a random value between 1 and the argument, inclusive. The argument cannot be 0 or negative.
+              - BITNOT(expr): Returns the bitwise NOT of the argument.
+              - BITAND(expr, expr): Returns the bitwise AND of the arguments.
+              - BITOR(expr, expr): Returns the bitwise OR of the arguments.
+              - BITXOR(expr, expr): Returns the bitwise XOR of the arguments.
+              - SHL(expr, expr): Returns the result of shifting the bits of the first argument left by the amount specified by the second argument.
+              - SHR(expr, expr): Returns the result of shifting the bits of the first argument right by the amount specified in the second argument, shifting in 0s from the left.
+              - SAR(expr, expr): Returns the result of shifting the bits of the first argument right by the amount specified in the second argument, sign extending the most significant bit.
               
               Notes:
               - Expressions may grouped with ().

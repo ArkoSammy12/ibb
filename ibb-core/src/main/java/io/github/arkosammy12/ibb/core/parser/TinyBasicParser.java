@@ -11,6 +11,7 @@ import io.github.arkosammy12.ibb.core.util.SourceStream;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.function.BiFunction;
 import java.util.function.Predicate;
 
 public final class TinyBasicParser {
@@ -193,6 +194,15 @@ public final class TinyBasicParser {
         return expressionNode;
     }
 
+    private ExpressionNode parseParenthesizedDoubleExpressions(TinyBasicParserContext context, String expected, BiFunction<ExpressionNode, ExpressionNode, ExpressionNode> factorFunction) throws TinyBasicParseException {
+        this.expect(context, opening -> opening instanceof DelimiterToken openingDelimiter && openingDelimiter.getDelimiter() == Delimiter.LEFT_PARENTHESIS, "'(' to begin %s".formatted(expected));
+        ExpressionNode lhs = this.parseExpression(context);
+        this.expect(context, middle -> middle instanceof DelimiterToken middleDelimiter && middleDelimiter.getDelimiter() == Delimiter.COMMA, "',' to separate arguments for %s".formatted(expected));
+        ExpressionNode rhs = this.parseExpression(context);
+        this.expect(context, closing -> closing instanceof DelimiterToken closingDelimiter && closingDelimiter.getDelimiter() == Delimiter.RIGHT_PARENTHESIS, "')' to end %s".formatted(expected));
+        return factorFunction.apply(lhs, rhs);
+    }
+
     private void consumeRemainingTokens(TinyBasicParserContext context) {
         while (context.hasTokens()) {
             context.poll();
@@ -331,6 +341,13 @@ public final class TinyBasicParser {
                 case ABS -> new NumericExpressionNode.AbsFunctionNode(this.parseParenthesizedExpression(context, "ABS() expression argument"));
                 case RND -> new NumericExpressionNode.RndFunctionNode(this.parseParenthesizedExpression(context, "RND() expression argument"));
                 case SGN -> new NumericExpressionNode.SgnFunctionNode(this.parseParenthesizedExpression(context, "SGN() expression argument"));
+                case BIT_NOT -> new NumericExpressionNode.BitNotFunctionNode(this.parseParenthesizedExpression(context, "BITNOT() expression argument"));
+                case BIT_AND -> this.parseParenthesizedDoubleExpressions(context, "BITAND() expression arguments", NumericExpressionNode.BitAndFunctionNode::new);
+                case BIT_OR -> this.parseParenthesizedDoubleExpressions(context, "BITOR() expression arguments", NumericExpressionNode.BitOrFunctionNode::new);
+                case BIT_XOR -> this.parseParenthesizedDoubleExpressions(context, "BITXOR() expression arguments", NumericExpressionNode.BitXorFunctionNode::new);
+                case SHL -> this.parseParenthesizedDoubleExpressions(context, "SHL() expression arguments", NumericExpressionNode.ShlFunctionNode::new);
+                case SHR -> this.parseParenthesizedDoubleExpressions(context, "SHR() expression arguments", NumericExpressionNode.ShrFunctionNode::new);
+                case SAR -> this.parseParenthesizedDoubleExpressions(context, "SAR() expression arguments", NumericExpressionNode.SarFunctionNode::new);
                 default -> throw new TinyBasicParseException("Expected variable, number, array reference, function or expression, found '%s'".formatted(keywordToken.getLexeme()), keywordToken.getSourcePosition());
             };
             case Token token -> throw new TinyBasicParseException("Expected variable, number, array reference, function or expression, found '%s'".formatted(token.getLexeme()), token.getSourcePosition());
