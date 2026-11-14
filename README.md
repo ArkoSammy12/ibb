@@ -107,3 +107,10 @@ To skip the automated tests, append the `-DskipTests` to the build command.
 
 ## License
 This project is licensed under the [MIT License](LICENSE).
+
+## References
+
+- [Wikipedia - Tiny BASIC](https://en.wikipedia.org/wiki/Tiny_BASIC).
+- [Itty Bitty Computers - TINY BASIC User Manual](http://www.ittybittycomputers.com/IttyBitty/TinyBasic/TBuserMan.htm).
+- [thisiscool.com - TinyBasic](https://www.thisiscool.com/tinybasic.htm).
+- [eddavis2 - Tiny-Basic](https://github.com/eddavis2/Tiny-Basic).
