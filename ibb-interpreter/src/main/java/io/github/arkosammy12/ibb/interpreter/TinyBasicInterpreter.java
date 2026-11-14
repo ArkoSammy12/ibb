@@ -134,8 +134,7 @@ public final class TinyBasicInterpreter {
                  if (jumpTargetLineIndex < 0) {
                      throw new TinyBasicUndefinedTargetException(normalizeLineNumber(lineNumber), currentStatementIndex, JumpType.GOTO, jumpTargetLineNumber);
                  }
-                 this.setLineIndex(jumpTargetLineIndex);
-                 this.setStatementIndex(0);
+                 this.skipToLine(jumpTargetLineIndex);
             }
             case StatementNode.GoSub(ExpressionNode targetExpression) -> {
                 short subroutineLineNumber = this.evaluateExpressionToNumericValue(lineNumber, currentStatementIndex, targetExpression);
@@ -147,16 +146,13 @@ public final class TinyBasicInterpreter {
                     throw new TinyBasicUndefinedTargetException(normalizeLineNumber(lineNumber), currentStatementIndex, JumpType.GOSUB, subroutineLineNumber);
                 }
                 this.gosubStack.push(new ProgramIndex(this.getLineIndex(), this.getStatementIndex()));
-                this.setLineIndex(subroutineLineIndex);
-                this.setStatementIndex(0);
+                this.skipToLine(subroutineLineIndex);
             }
             case StatementNode.Return _ -> {
                 if (this.gosubStack.isEmpty()) {
                     throw new TinyBasicReturnWithoutGoSubException(normalizeLineNumber(lineNumber), currentStatementIndex);
                 } else {
-                    ProgramIndex returnIndex = this.gosubStack.pop();
-                    this.setLineIndex(returnIndex.lineIndex());
-                    this.setStatementIndex(returnIndex.statementIndex());
+                    this.setProgramIndex(this.gosubStack.pop());
                 }
             }
             case StatementNode.If(ExpressionNode conditionalExpression, StatementNode statement) -> {
@@ -188,9 +184,7 @@ public final class TinyBasicInterpreter {
                     short endValue = loopFrame.endValue();
                     short variableValue = this.getVariable(loopVariable);
                     if (stepValue >= 0 ? variableValue <= endValue : variableValue >= endValue) {
-                        ProgramIndex loopStartProgramIndex = loopFrame.loopStartProgramIndex();
-                        this.setLineIndex(loopStartProgramIndex.lineIndex());
-                        this.setStatementIndex(loopStartProgramIndex.statementIndex());
+                        this.setProgramIndex(loopFrame.loopStartProgramIndex());
                     } else {
                         this.loopFrames[loopVariable.getIndex()] = null;
                     }
@@ -394,6 +388,28 @@ public final class TinyBasicInterpreter {
         }
     }
 
+    private void skipToLine(int lineIndex) {
+        this.setLineIndex(lineIndex);
+        this.setStatementIndex(0);
+    }
+
+    private void skipToNextLine() {
+        if (this.getLineIndex() < 0) {
+            this.skipToLine(0);
+        } else {
+            this.skipToLine(Math.addExact(this.getLineIndex(), 1));
+        }
+    }
+
+    private void incrementStatementIndex() {
+        this.setStatementIndex(Math.addExact(this.getStatementIndex(), 1));
+    }
+
+    private void setProgramIndex(ProgramIndex programIndex) {
+        this.setLineIndex(programIndex.lineIndex());
+        this.setStatementIndex(programIndex.statementIndex());
+    }
+
     private void setLineIndex(int lineIndex) {
         this.lineIndex = lineIndex;
     }
@@ -403,31 +419,14 @@ public final class TinyBasicInterpreter {
     }
 
     private void setStatementIndex(int statementIndex) {
+        if (statementIndex < 0) {
+            throw new IllegalArgumentException("Cannot set statement index to '%d' because it is negative!".formatted(statementIndex));
+        }
         this.statementIndex = statementIndex;
     }
 
     private int getStatementIndex() {
         return this.statementIndex;
-    }
-
-    private void skipToNextLine() {
-        if (this.lineIndex < 0) {
-            this.lineIndex = 0;
-            this.statementIndex = 0;
-        } else if (this.lineIndex == Integer.MAX_VALUE) {
-            throw new IllegalStateException("Tried incrementing interpreter line index beyond maximum integer value");
-        } else {
-            this.lineIndex++;
-            this.statementIndex = 0;
-        }
-    }
-
-    private void incrementStatementIndex() {
-        if (this.statementIndex == Integer.MAX_VALUE) {
-            throw new IllegalStateException("Tried incrementing interpreter line statement index beyond maximum integer value");
-        } else {
-            this.statementIndex++;
-        }
     }
 
     private record LoopFrame(short endValue, short stepValue, ProgramIndex loopStartProgramIndex) {}
