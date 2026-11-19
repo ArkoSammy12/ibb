@@ -397,7 +397,7 @@ public final class Ibb implements TinyBasicInterpreterHost {
               - Binary: +, -, *, /, \\, mod, ^, <, <=, >, >=, =, <>, ><, and, or
               
               Variables:
-              - Letters: A, B, C, D, E, F, G, H, I, J, K, L, M, N, O, P, Q, R, S, T, U, V, W, X, Y, Z.
+              - Built-in: A-Z, A0-Z9
               - Array: @(expr)
               
               Functions:
